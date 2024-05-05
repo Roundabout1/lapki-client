@@ -1,9 +1,15 @@
 import settings from 'electron-settings';
 
+//import fixPath from 'fix-path';
+import { lookpath } from 'lookpath';
+
 import { ChildProcessWithoutNullStreams, spawn } from 'child_process';
 import { existsSync } from 'fs';
 import path from 'path';
 
+import { pathFix } from './pathFix';
+
+//import { pathFix } from './pathFix';
 export type ModuleName = 'lapki-flasher';
 
 export class ModuleStatus {
@@ -37,6 +43,8 @@ export class ModuleManager {
   static moduleStatus: Map<string, ModuleStatus> = new Map();
 
   static async startLocalModule(module: ModuleName) {
+    pathFix();
+    //fixPath();
     this.moduleStatus[module] = new ModuleStatus();
     if (!this.localProccesses.has(module)) {
       const platform = process.platform;
@@ -112,6 +120,19 @@ export class ModuleManager {
             }
             if (existsSync(avrdudePath)) {
               flasherArgs.push(`-avrdudePath=${avrdudePath}`);
+              //settings.setSync(AVRDUDE_SETTING, true);
+              console.log('AVRDUDE TRUE', avrdudePath);
+            } else {
+              await lookpath('avrdude').then((path: string | undefined) => {
+                if (path) {
+                  //settings.set(AVRDUDE_SETTING, true);
+                  console.log('AVRDUDE TRUE', path);
+                  flasherArgs.push(`-avrdudePath=${path}`);
+                } else {
+                  //settings.set(AVRDUDE_SETTING, false);
+                  console.log('AVRDUDE FALSE', path);
+                }
+              });
             }
             if (existsSync(configPath)) {
               flasherArgs.push(`-configPath=${configPath}`);
