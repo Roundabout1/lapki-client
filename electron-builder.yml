@@ -22,7 +22,8 @@ nsis:
 mac:
   artifactName: ${name}-v${version}.${ext}
   category: 'public.app-category.developer-tools'
-  entitlementsInherit: build/entitlements.mac.plist
+  entitlementsInherit: build/entitlements.mac.inherit.plist
+  entitlements: build/entitlements.mac.plist
 linux:
   artifactName: ${name}-v${version}.${ext}
   target:
