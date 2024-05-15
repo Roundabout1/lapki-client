@@ -199,10 +199,15 @@ export const Loader: React.FC<FlasherProps> = ({ compilerData }) => {
 
   useEffect(() => {
     if (!flasherSetting) return;
-    const { host, port } = flasherSetting;
-
-    Flasher.connect(host, port);
-  }, [flasherSetting]);
+    const { host, port, localPort, type } = flasherSetting;
+    if (type === 'local' && port !== localPort) {
+      setFlasherSetting({ ...flasherSetting, port: localPort }).then(() => {
+        Flasher.connect(host, localPort);
+      });
+    } else {
+      Flasher.connect(host, port);
+    }
+  }, [flasherSetting, setFlasherSetting]);
 
   const display = () => {
     if (!flasherIsLocal && connectionStatus == FLASHER_CONNECTING) {
@@ -219,14 +224,9 @@ export const Loader: React.FC<FlasherProps> = ({ compilerData }) => {
     }
   };
 
-  const handleReconnect = () => {
-    if (!flasherSetting) return;
-    const { host, port } = flasherSetting;
-
+  const handleReconnect = async () => {
     if (flasherIsLocal) {
-      window.electron.ipcRenderer.invoke('Module:reboot', 'lapki-flasher').then(() => {
-        Flasher.connect(host, port);
-      });
+      await window.electron.ipcRenderer.invoke('Module:reboot', 'lapki-flasher');
     } else {
       Flasher.reconnect();
     }

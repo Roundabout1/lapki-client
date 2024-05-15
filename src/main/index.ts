@@ -6,9 +6,8 @@ import { join } from 'path';
 
 import { checkForUpdates } from './checkForUpdates';
 import { initFileHandlersIPC } from './file-handlers';
-import { findFreePort } from './modules/freePortFinder';
 import { ModuleName, ModuleManager } from './modules/ModuleManager';
-import { initSettings } from './settings';
+import { initSettings, settingsChangeSend } from './settings';
 import { getAllTemplates, getTemplate } from './templates';
 
 import icon from '../../resources/icon.png?asset';
@@ -16,7 +15,7 @@ import icon from '../../resources/icon.png?asset';
 /**
  * Создание главного окна редактора.
  */
-function createWindow(): void {
+function createWindow(): BrowserWindow {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
     show: false,
@@ -93,15 +92,20 @@ function createWindow(): void {
   }
 
   initSettings(mainWindow.webContents);
+
+  return mainWindow;
 }
 
 // Выполняется после инициализации Electron
 app.whenReady().then(() => {
   initFileHandlersIPC();
 
-  ipcMain.handle('Module:reboot', (_event, module: ModuleName) => {
+  ipcMain.handle('Module:reboot', async (_event, module: ModuleName) => {
     ModuleManager.stopModule(module);
-    ModuleManager.startLocalModule(module);
+    await ModuleManager.startLocalModule(module);
+    if (module == 'lapki-flasher') {
+      settingsChangeSend(mainWindow.webContents, 'flasher', settings.getSync('flasher'));
+    }
   });
 
   ipcMain.handle('Module:getStatus', (_event, module: ModuleName) => {
@@ -125,14 +129,11 @@ app.whenReady().then(() => {
   });
 
   const startFlasher = async () => {
-    const port = await findFreePort();
-    await settings.set('flasher.localPort', port);
-
     ModuleManager.startLocalModule('lapki-flasher');
   };
   startFlasher();
 
-  createWindow();
+  const mainWindow = createWindow();
 
   app.on('activate', function () {
     // Восстановление окна для macOS.
