@@ -41,11 +41,9 @@ export const initSettings = (webContents: WebContents) => {
   ipcMain.handle('settings:reset', async (_event, key: string) => {
     await settingsChange(webContents, key, defaultSettings[key]);
   });
-  ipcMain.handle('settings:fullReset', async (_event) => {
+  ipcMain.handle('settings:fullReset', async () => {
     for (const key in defaultSettings) {
-      await settings.set(key, defaultSettings[key]);
-
-      webContents.send(`settings:change:${key}`, defaultSettings[key]);
+      await settingsChange(webContents, key, defaultSettings[key]);
     }
   });
 };
