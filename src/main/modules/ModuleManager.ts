@@ -1,6 +1,7 @@
 import settings from 'electron-settings';
 // импорт старой версии (3.0 вместо 4.0), так как новая версия требует ESM
 import fixPath from 'fix-path';
+import * as iconv from 'iconv-lite';
 
 import { ChildProcessWithoutNullStreams, spawn } from 'child_process';
 import { existsSync } from 'fs';
@@ -151,10 +152,10 @@ export class ModuleManager {
         ModuleManager.moduleStatus[module] = new ModuleStatus(1);
         this.localProccesses.set(module, chprocess);
         chprocess.stdout.on('data', (data) => {
-          console.log(`${module}-stdout: ${data}`);
+          console.log(`${module}-stdout: ${iconv.decode(data, 'CP866')}`);
         });
         chprocess.stderr.on('data', (data) => {
-          console.log(`${module}-stderr: ${data}`);
+          console.log(`${module}-stderr: ${iconv.decode(data, 'win1251')}`);
         });
 
         chprocess.on('exit', () => {
