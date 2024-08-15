@@ -3,18 +3,17 @@ import settings from 'electron-settings';
 
 export const defaultSettings = {
   doc: {
-    host: 'https://lapki-doc.polyus-nt.ru/',
+    host: 'https://lapki-doc.polyus-nt.ru/v/0.2.0/',
   },
   compiler: {
     host: 'lapki.polyus-nt.ru',
-    port: 8081,
+    port: 8082,
   },
   flasher: {
     host: 'localhost',
     port: 0,
     localPort: 0, //! Это ручками менять нельзя, инициализируется при запуске
     type: 'local' as 'local' | 'remote',
-    hasAvrdude: false,
   },
   platformsPath: '',
   theme: 'light' as 'light' | 'dark',
