@@ -39,7 +39,6 @@ export const StateMachinesList: React.FC = () => {
     // onSwapStateMachines
     onRequestAddStateMachine,
     onRequestEditStateMachine,
-    onRequestDeleteStateMachine,
   } = useStateMachines();
   // TODO (Roundabout1): этот массив используется для теста, нужно будет доставать его из другого места
   const platformList = getAvailablePlatforms().map((platform) => {
@@ -71,7 +70,7 @@ export const StateMachinesList: React.FC = () => {
               isSelected={id === selectedSm}
               onSelect={() => setSmSelected(id)}
               onEdit={() => onRequestEditStateMachine(id)}
-              onDelete={() => onRequestDeleteStateMachine(id)}
+              onDelete={() => undefined}
               onCallContextMenu={() => onCallContextMenu(id, sm)}
               // TODO: Доделать свап машин состояний
               onDragStart={() => console.log('setDragState')}

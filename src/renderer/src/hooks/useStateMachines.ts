@@ -51,15 +51,6 @@ export const useStateMachines = () => {
     openEdit();
   };
 
-  const onRequestDeleteStateMachine = (idx: string) => {
-    const stateMachine = model.data.elements.stateMachines[idx];
-    if (!stateMachine) return;
-    const smData = { name: stateMachine.name ?? '', platform: stateMachine.platform };
-    setIdx(idx);
-    setData(smData);
-    openDelete();
-  };
-
   const onAdd = (data: StateMachineData) => {
     const smId = generateId();
     const sm = { ...emptyStateMachine(), ...data };
@@ -119,7 +110,6 @@ export const useStateMachines = () => {
       idx: idx,
     },
     onRequestAddStateMachine,
-    onRequestDeleteStateMachine,
     onRequestEditStateMachine,
   };
 };
