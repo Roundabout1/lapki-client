@@ -19,6 +19,7 @@ interface StateMachineEditModalProps {
   onSide: (() => void) | undefined;
   form: UseFormReturn<StateMachineData>;
   platformList: optionType[];
+  isDuplicateName: (name: string) => boolean;
 }
 
 // TODO (Roundabout1): наверное стоит перенести этот тип данных в другое место?
@@ -36,8 +37,15 @@ export const StateMachineEditModal: React.FC<StateMachineEditModalProps> = ({
   onSide,
   form,
   platformList,
+  isDuplicateName,
 }) => {
-  const { handleSubmit: hookHandleSubmit, control, reset } = form;
+  const {
+    handleSubmit: hookHandleSubmit,
+    control,
+    reset,
+    setError,
+    formState: { errors },
+  } = form;
   const modelController = useModelContext();
   const editor = modelController.getCurrentCanvas();
 
@@ -47,6 +55,16 @@ export const StateMachineEditModal: React.FC<StateMachineEditModalProps> = ({
   };
 
   const handleSubmit = hookHandleSubmit((data) => {
+    if (isDuplicateName(data.name)) {
+      setError('name', { message: 'Имя не должно повторяться' });
+      return;
+    }
+    if (!data.platform) {
+      setError('platform', { message: 'Выберите платформу' });
+      return;
+    }
+    //setError('name', { message: '' });
+    //return;
     onSubmit(data);
     reset({ name: undefined, platform: undefined });
     onClose();
@@ -79,6 +97,7 @@ export const StateMachineEditModal: React.FC<StateMachineEditModalProps> = ({
               placeholder="Введите название..."
               onChange={onChange}
               value={value ?? ''}
+              error={errors.name?.message}
             ></ComponentFormFieldLabel>
           )}
         />
@@ -86,7 +105,7 @@ export const StateMachineEditModal: React.FC<StateMachineEditModalProps> = ({
           name="platform"
           control={control}
           render={({ field: { onChange, value } }) => (
-            <ComponentFormFieldLabel label="Платформа">
+            <ComponentFormFieldLabel label="Платформа" error={errors.platform?.message}>
               <Select
                 className="w-[250px]"
                 isSearchable={false}

@@ -89,6 +89,16 @@ export const useStateMachines = () => {
     editClose();
   };
 
+  const isDuplicateName = (name: string) => {
+    const machines = [...Object.entries(modelController.model.data.elements.stateMachines)];
+    for (const [, value] of machines) {
+      if (value.name && value.name == name) {
+        return true;
+      }
+    }
+    return false;
+  };
+
   // TODO: swap state machines
   // const onSwapComponents = (name1: string, name2: string) => {
   //   modelController.swapComponents({ smId: currentSm, name1, name2 });
@@ -117,5 +127,6 @@ export const useStateMachines = () => {
     },
     onRequestAddStateMachine,
     onRequestEditStateMachine,
+    isDuplicateName,
   };
 };

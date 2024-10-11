@@ -39,6 +39,7 @@ export const StateMachinesList: React.FC = () => {
     // onSwapStateMachines
     onRequestAddStateMachine,
     onRequestEditStateMachine,
+    isDuplicateName,
   } = useStateMachines();
   // TODO (Roundabout1): этот массив используется для теста, нужно будет доставать его из другого места
   const platformList = getAvailablePlatforms().map((platform) => {
@@ -89,6 +90,7 @@ export const StateMachinesList: React.FC = () => {
         onSide={editProps.onDelete}
         sideLabel="Удалить"
         platformList={platformList}
+        isDuplicateName={isDuplicateName}
       />
       <StateMachineEditModal
         form={addProps.addForm}
@@ -99,6 +101,7 @@ export const StateMachinesList: React.FC = () => {
         onSide={undefined}
         sideLabel={undefined}
         platformList={platformList}
+        isDuplicateName={isDuplicateName}
       />
       <StateMachineDeleteModal {...{ ...deleteProps, idx: selectedSm ?? undefined }} />
     </section>
