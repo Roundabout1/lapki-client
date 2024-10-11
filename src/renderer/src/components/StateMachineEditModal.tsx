@@ -48,7 +48,7 @@ export const StateMachineEditModal: React.FC<StateMachineEditModalProps> = ({
 
   const handleSubmit = hookHandleSubmit((data) => {
     onSubmit(data);
-    reset({ name: '', platform: '' });
+    reset({ name: undefined, platform: undefined });
     onClose();
   });
 

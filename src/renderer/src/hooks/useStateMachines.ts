@@ -15,10 +15,11 @@ export const useStateMachines = () => {
   const model = modelController.model;
 
   // const currentSm = model.useData('', 'currentSm');
-  const [items, openTab, closeTab] = useTabs((state) => [
+  const [items, openTab, closeTab, renameTab] = useTabs((state) => [
     state.items,
     state.openTab,
     state.closeTab,
+    state.renameTab,
   ]);
   const [idx, setIdx] = useState<string | undefined>(undefined); // индекс текущей машины состояний
   const [data, setData] = useState<StateMachineData>({
@@ -56,11 +57,16 @@ export const useStateMachines = () => {
     const sm = { ...emptyStateMachine(), ...data };
     const canvasId = modelController.createStateMachine(smId, sm);
     modelController.model.changeHeadControllerId(canvasId);
-    openTab({ type: 'editor', canvasId: canvasId, name: sm.name ?? smId });
+    openTab({ type: 'editor', canvasId: canvasId, name: sm.name ? sm.name : smId });
   };
 
   const onEdit = (data: StateMachineData) => {
     if (!idx) return;
+    const sm = modelController.model.data.elements.stateMachines[idx];
+    const smName = sm.name ?? '';
+    if (data.name != smName) {
+      renameTab(smName ? smName : idx, data.name ? data.name : idx);
+    }
     modelController.editStateMachine(idx, data);
   };
 
