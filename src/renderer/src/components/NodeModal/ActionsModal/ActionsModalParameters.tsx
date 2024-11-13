@@ -9,6 +9,41 @@ import { ArgList } from '@renderer/types/diagram';
 import { ArgType, ArgumentProto } from '@renderer/types/platform';
 import { formatArgType, validators } from '@renderer/utils';
 
+enum ParameterType {
+  literl = 0,
+  attribute,
+  operand,
+}
+
+type ParameterAttribute = {
+  ID: string;
+  value: string;
+  isAttribute: ParameterType;
+};
+
+const operand = [
+  {
+    value: 'Addition ',
+    label: '+',
+  },
+  {
+    value: 'subtraction ',
+    label: '-',
+  },
+  {
+    value: 'multiplication',
+    label: '*',
+  },
+  {
+    value: 'division ',
+    label: '/',
+  },
+  {
+    value: 'remainder ',
+    label: '%',
+  },
+];
+
 interface ActionsModalParametersProps {
   protoParameters: ArgumentProto[];
   parameters: ArgList;
@@ -45,6 +80,7 @@ export const ActionsModalParameters: React.FC<ActionsModalParametersProps> = ({
     setParameters({ ...parameters });
   };
 
+  const [parametersAttributes, setParametersAttributes] = useState<ParameterAttribute>();
   const [selectedParameterComponent, setSelectedParameterComponent] = useState<string | null>(null);
   const [selectedMethod, setSelectedMethod] = useState<string | null>(null);
   const [isChecked, setIsChecked] = useState(false);
@@ -124,46 +160,55 @@ export const ActionsModalParameters: React.FC<ActionsModalParametersProps> = ({
           );
         }
 
+        const parseParameters = value.split(' ').map((parameter) => {
+          return { value: parameter, isAttribute: isNaN(Number(parameter)) };
+        });
+
         return (
-          <div className="flex items-start" key={name}>
-            <Checkbox
-              checked={!isChecked}
-              onCheckedChange={(v) => setIsChecked(!v)}
-              className="mr-2 mt-[9px]"
-            />
-            {isChecked ? (
-              <div className="flex w-full gap-2" key={name}>
-                <Select
-                  containerClassName="w-full"
-                  options={filteredComponentOptions}
-                  onChange={(opt) => handleComponentChange(name, type, opt)}
-                  value={
-                    filteredComponentOptions.find((o) => o.value === selectedParameterComponent) ??
-                    null
-                  }
-                  isSearchable={false}
-                  //error={errors.selectedComponentParam1 || ''}
+          <div>
+            {parseParameters.map((parameter, index) => (
+              <div className="flex items-start" key={index}>
+                <Checkbox
+                  checked={!parameter.isAttribute}
+                  onCheckedChange={(v) => setIsChecked(!v)}
+                  className="mr-2 mt-[9px]"
                 />
-                <Select
-                  containerClassName="w-full"
-                  options={methodOptions}
-                  onChange={(opt) => handleMethodChange(name, type, opt)}
-                  value={methodOptions.find((o) => o.value === selectedMethod) ?? null}
-                  isSearchable={false}
-                  //error={errors.selectedMethodParam1 || ''}
-                />
+                {isChecked ? (
+                  <div className="flex w-full gap-2" key={index}>
+                    <Select
+                      containerClassName="w-full"
+                      options={filteredComponentOptions}
+                      onChange={(opt) => handleComponentChange(name, type, opt)}
+                      value={
+                        filteredComponentOptions.find(
+                          (o) => o.value === selectedParameterComponent
+                        ) ?? null
+                      }
+                      isSearchable={false}
+                      //error={errors.selectedComponentParam1 || ''}
+                    />
+                    <Select
+                      containerClassName="w-full"
+                      options={methodOptions}
+                      onChange={(opt) => handleMethodChange(name, type, opt)}
+                      value={methodOptions.find((o) => o.value === selectedMethod) ?? null}
+                      isSearchable={false}
+                      //error={errors.selectedMethodParam1 || ''}
+                    />
+                  </div>
+                ) : (
+                  <ComponentFormFieldLabel
+                    key={index}
+                    label={label}
+                    hint={hint}
+                    error={error}
+                    value={value}
+                    name={name}
+                    onChange={(e) => handleInputChange(name, type, e.target.value)}
+                  />
+                )}
               </div>
-            ) : (
-              <ComponentFormFieldLabel
-                key={name}
-                label={label}
-                hint={hint}
-                error={error}
-                value={value}
-                name={name}
-                onChange={(e) => handleInputChange(name, type, e.target.value)}
-              />
-            )}
+            ))}
           </div>
         );
       })}
