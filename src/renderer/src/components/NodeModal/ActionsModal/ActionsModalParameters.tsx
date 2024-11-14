@@ -10,39 +10,21 @@ import { ArgType, ArgumentProto } from '@renderer/types/platform';
 import { formatArgType, validators } from '@renderer/utils';
 
 enum ParameterType {
-  literl = 0,
+  literal = 0,
   attribute,
   operand,
 }
 
 type ParameterAttribute = {
-  ID: string;
+  ID: number;
   value: string;
-  isAttribute: ParameterType;
+  paramType: ParameterType;
 };
 
-const operand = [
-  {
-    value: 'Addition ',
-    label: '+',
-  },
-  {
-    value: 'subtraction ',
-    label: '-',
-  },
-  {
-    value: 'multiplication',
-    label: '*',
-  },
-  {
-    value: 'division ',
-    label: '/',
-  },
-  {
-    value: 'remainder ',
-    label: '%',
-  },
-];
+const operands = ['+', '-', '*', '/', '%'];
+const operansOptions = operands.map((v) => {
+  return { label: v, value: v };
+});
 
 interface ActionsModalParametersProps {
   protoParameters: ArgumentProto[];
@@ -66,32 +48,14 @@ export const ActionsModalParameters: React.FC<ActionsModalParametersProps> = ({
   componentOptions,
 }) => {
   const { controller } = useEditorContext();
-
-  const handleInputChange = (name: string, type: ArgType | undefined, value: string) => {
-    // if (type && typeof type === 'string' && validators[type]) {
-    //   if (!validators[type](value)) {
-    //     setErrors((p) => ({ ...p, [name]: `Неправильный тип (${formatArgType(type)})` }));
-    //   } else {
-    //     setErrors((p) => ({ ...p, [name]: '' }));
-    //   }
-    // }
-
-    parameters[name] = value;
-    setParameters({ ...parameters });
-  };
-
-  const [parametersAttributes, setParametersAttributes] = useState<ParameterAttribute>();
-  const [selectedParameterComponent, setSelectedParameterComponent] = useState<string | null>(null);
-  const [selectedMethod, setSelectedMethod] = useState<string | null>(null);
-  const [isChecked, setIsChecked] = useState(false);
-
+  const [parametersAttributes, setParametersAttributes] = useState<ParameterAttribute[]>();
+  const [parameterID, setParameterID] = useState<number>(0);
   const filteredComponentOptions = componentOptions?.filter((v) => v.value != selectedComponent);
-  const methodOptions: SelectOption[] = useMemo(() => {
+  const methodOptions = (selectedParameterComponent: string) => {
     if (!selectedParameterComponent || !controller.platform) return [];
     const getAll = controller.platform['getAvailableVariables'];
     const getImg = controller.platform['getVariableIconUrl'];
 
-    // Тут call потому что контекст теряется
     return getAll
       .call(controller.platform, selectedParameterComponent)
       .map(({ name, description }) => {
@@ -107,27 +71,82 @@ export const ActionsModalParameters: React.FC<ActionsModalParametersProps> = ({
           ),
         };
       });
-  }, [controller.platform, selectedParameterComponent]);
+  };
+  const handleInputChange = (name: string, type: ArgType | undefined, value: string) => {
+    // if (type && typeof type === 'string' && validators[type]) {
+    //   if (!validators[type](value)) {
+    //     setErrors((p) => ({ ...p, [name]: `Неправильный тип (${formatArgType(type)})` }));
+    //   } else {
+    //     setErrors((p) => ({ ...p, [name]: '' }));
+    //   }
+    // }
 
-  const handleComponentChange = (
-    name: string,
-    type: ArgType | undefined,
-    value: SingleValue<SelectOption>
-  ) => {
-    setSelectedParameterComponent(value?.value ?? null);
-    setSelectedMethod(null);
-    handleInputChange(name, type, '');
+    parameters[name] = value;
+    setParameters({ ...parameters });
   };
 
-  const handleMethodChange = (
-    name: string,
-    type: ArgType | undefined,
-    value: SingleValue<SelectOption>
-  ) => {
-    setSelectedMethod(value?.value ?? null);
-    if (value) {
-      handleInputChange(name, type, `${selectedParameterComponent}.${value?.value}`);
+  const parseComponentMethod = (value: string) => {
+    const split = value.split('.');
+    return { component: split[0], method: split[1] };
+  };
+
+  const handleParametersAttributesAdd = (newValue: string) => {
+    if (!parametersAttributes) return;
+    const newID = parameterID + 1;
+    setParameterID(newID);
+    setParametersAttributes([
+      ...parametersAttributes,
+      { ID: newID, value: newValue, paramType: ParameterType.attribute },
+    ]);
+  };
+
+  const handleParameterAttributeDelete = (ID: number) => {
+    if (!parametersAttributes) return;
+    setParametersAttributes(parametersAttributes.filter((item) => item.ID !== ID));
+  };
+
+  const handleMethodChange = (ID: number, newValue: SingleValue<SelectOption>) => {
+    if (!parametersAttributes) return;
+    const newParametersAttributes = parametersAttributes.map((oldValue) => {
+      if (oldValue.ID == ID) {
+        const parsed = parseComponentMethod(oldValue.value);
+        return {
+          ID: ID,
+          value: `${parsed.component}.${newValue?.value ?? ''}`,
+          paramType: ParameterType.attribute,
+        };
+      } else {
+        return oldValue;
+      }
+    });
+    setParametersAttributes(newParametersAttributes);
+  };
+
+  const handleParamtersAttributesChange = (ID: number, newValue: string, type: ParameterType) => {
+    if (!parametersAttributes) return;
+    const newParametersAttributes = parametersAttributes.map((oldValue) => {
+      if (oldValue.ID == ID) {
+        return {
+          ID: ID,
+          value: newValue,
+          paramType: type,
+        };
+      } else {
+        return oldValue;
+      }
+    });
+    setParametersAttributes(newParametersAttributes);
+  };
+
+  const parseParameterType = (parameter: string) => {
+    if (operands.includes(parameter)) {
+      return ParameterType.operand;
+    } else if (!isNaN(Number(parameter))) {
+      return ParameterType.literal;
+    } else if (parameter.includes('"')) {
+      return ParameterType.literal;
     }
+    return ParameterType.attribute;
   };
 
   if (protoParameters.length === 0) {
@@ -160,10 +179,15 @@ export const ActionsModalParameters: React.FC<ActionsModalParametersProps> = ({
           );
         }
 
-        const parseParameters = value.split(' ').map((parameter) => {
-          return { value: parameter, isAttribute: isNaN(Number(parameter)) };
+        const parseParameters = value.split(' ').map((parameter, index) => {
+          return {
+            value: parameter,
+            ID: index,
+            paramType: parseParameterType(parameter),
+          };
         });
-
+        setParameterID(parseParameters.length - 1);
+        setParametersAttributes(parseParameters);
         return (
           <div>
             {parseParameters.map((parameter, index) => (
