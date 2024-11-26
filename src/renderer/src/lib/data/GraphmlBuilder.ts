@@ -33,7 +33,7 @@ import {
   Note,
 } from '@renderer/types/diagram';
 import { Platform } from '@renderer/types/platform';
-import { isString } from '@renderer/utils';
+import { buildMatrix, isString } from '@renderer/utils';
 
 import { isDefaultComponent, convertDefaultComponent } from './ElementsValidator';
 
@@ -55,6 +55,12 @@ function exportMeta(visual: boolean, meta: Meta, platform: Platform): CGMLMeta {
 function serializeArgs(args: ArgList | undefined) {
   if (args === undefined) {
     return '';
+  }
+  for (const argId in args) {
+    const arg = args[argId];
+    if (Array.isArray(arg) && Array.isArray(arg[0])) {
+      args[argId] = buildMatrix({ values: arg, width: arg.length, height: arg[0].length });
+    }
   }
   return Object.values(args).join(', ');
 }
@@ -78,8 +84,7 @@ export function serializeEvent(trigger: Event): string {
 
 function getActionDelimeter(platform: Platform, componentType: string): string {
   const platformComponent = platform.components[componentType];
-  const isArduino = platform.name?.startsWith('Arduino');
-  return platformComponent.singletone && isArduino ? '::' : '.';
+  return platformComponent.singletone ? platform.staticActionDelimeter : '.';
 }
 
 /**
@@ -95,7 +100,7 @@ export function serializeActions(
   platform: Platform
 ): string {
   let serialized = '';
-  // TODO: Стиль команд, внедрить новый формат платформ
+
   for (const action of actions) {
     const component = components[action.component];
     const platformComponent = platform.components[component.type];
@@ -104,6 +109,7 @@ export function serializeActions(
       action.args
     )})${platform.delimeter}\n`;
   }
+
   return serialized.trim();
 }
 
