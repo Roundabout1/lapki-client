@@ -54,6 +54,8 @@ export const ComponentEditModal: React.FC<ComponentEditModalProps> = ({
 
   const handleNameValidation = (): boolean => {
     const validationResult = modelController.validator.validateComponentName(
+      smId,
+      controller,
       proto,
       name,
       idx,
@@ -114,7 +116,7 @@ export const ComponentEditModal: React.FC<ComponentEditModalProps> = ({
       onSide={handleDelete}
     >
       <ComponentFormFields
-        showMainData={!proto.singletone && !platform!.staticComponents}
+        showMainData={!proto.singletone && platform ? platform.staticComponents : false}
         protoParameters={proto.constructorParameters}
         protoInitializationParameters={proto.initializationParameters}
         name={name}
