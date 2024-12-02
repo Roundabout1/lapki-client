@@ -36,6 +36,8 @@ export const AddressBookModal: React.FC<AddressBookModalProps> = ({
   const [isAddressEnrtyAddOpen, openAddressEnrtyAdd, closeAddressEnrtyAdd] = useModal(false); // для добавления новых записей в адресную книгу
   const addressEntryAddForm = useForm<AddressData>();
 
+  const [isChecked, setIsChecked] = useState<Map<number, boolean | null>>(new Map([[0, null]]));
+
   const [idStorage, setIdStorage] = useState<number[]>([]);
   const [idCounter, setIdCounter] = useState<number>(0);
   const getID = (index: number) => {
@@ -127,7 +129,7 @@ export const AddressBookModal: React.FC<AddressBookModalProps> = ({
     addressEntryAddForm.reset();
   };
   const onSelect = (index: number) => {
-    if (index == 0) return;
+    if (index === 0) return;
     setSelectedEntry(index);
   };
   const onEdit = (data: AddressData, index: number) => {
@@ -141,6 +143,15 @@ export const AddressBookModal: React.FC<AddressBookModalProps> = ({
     onSubmit(addressBookSetting[selectedEntry].address);
     onClose();
   });
+  const onCheck = (index: number) => {
+    if (index === 0) return;
+    const currentChecked = isChecked.get(index) ?? false;
+    setIsChecked((oldValue) => {
+      const newValue = new Map(oldValue);
+      newValue.set(index, !currentChecked);
+      return newValue;
+    });
+  };
   return (
     <div>
       <Modal
@@ -169,10 +180,12 @@ export const AddressBookModal: React.FC<AddressBookModalProps> = ({
                 <AddressBookRow
                   isSelected={index === selectedEntry} // не должно равняться нулю, так как это индекс заголовка таблицы
                   data={field}
+                  checked={isChecked.get(index)}
                   onSelect={() => onSelect(index)}
                   onEdit={() => onEdit(field, index)}
                   onDragStart={() => onDragStart(index)}
                   onDrop={() => onSwapEntries(index)}
+                  onCheck={() => onCheck(index)}
                 ></AddressBookRow>
               </div>
             ))}
