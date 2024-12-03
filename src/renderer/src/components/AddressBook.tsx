@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 
 import { ReactComponent as AddIcon } from '@renderer/assets/icons/add.svg';
 import { ReactComponent as SubtractIcon } from '@renderer/assets/icons/subtract.svg';
-import { Modal } from '@renderer/components/UI';
+import { Modal, SelectOption } from '@renderer/components/UI';
 import { useModal } from '@renderer/hooks/useModal';
 import { AddressData } from '@renderer/types/FlasherTypes';
 
@@ -18,12 +18,14 @@ interface AddressBookModalProps {
   onClose: () => void;
   onSubmit: (address: string) => void;
   isDuplicate: (address: string) => boolean | undefined;
+  binaryOptions: SelectOption[];
 }
 
 /**
  * Модальное окно с адресной книгой МС-ТЮК.
  */
 export const AddressBookModal: React.FC<AddressBookModalProps> = ({
+  binaryOptions,
   addressBookSetting,
   setAddressBookSetting,
   onClose,
@@ -37,6 +39,9 @@ export const AddressBookModal: React.FC<AddressBookModalProps> = ({
   const addressEntryAddForm = useForm<AddressData>();
 
   const [isChecked, setIsChecked] = useState<Map<number, boolean | null>>(new Map([[0, null]]));
+  const [selectedBinary, setSelectedBinary] = useState<Map<number, SelectOption | null>>(
+    new Map([[0, null]])
+  );
 
   const [idStorage, setIdStorage] = useState<number[]>([]);
   const [idCounter, setIdCounter] = useState<number>(0);
@@ -152,6 +157,14 @@ export const AddressBookModal: React.FC<AddressBookModalProps> = ({
       return newValue;
     });
   };
+  const onBinaryChange = (index: number, binary: SelectOption) => {
+    if (index === 0) return;
+    setSelectedBinary((oldValue) => {
+      const newValue = new Map(oldValue);
+      newValue.set(index, binary);
+      return newValue;
+    });
+  };
   return (
     <div>
       <Modal
@@ -181,11 +194,14 @@ export const AddressBookModal: React.FC<AddressBookModalProps> = ({
                   isSelected={index === selectedEntry} // не должно равняться нулю, так как это индекс заголовка таблицы
                   data={field}
                   checked={isChecked.get(index)}
+                  binaryOptions={binaryOptions}
+                  selectedBinary={selectedBinary.get(index)}
                   onSelect={() => onSelect(index)}
                   onEdit={() => onEdit(field, index)}
                   onDragStart={() => onDragStart(index)}
                   onDrop={() => onSwapEntries(index)}
                   onCheck={() => onCheck(index)}
+                  onBinaryChange={(binary) => onBinaryChange(index, binary)}
                 ></AddressBookRow>
               </div>
             ))}

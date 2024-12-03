@@ -5,6 +5,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 
 import { useModal } from '@renderer/hooks/useModal';
 import { useSettings } from '@renderer/hooks/useSettings';
+import { getPlatform } from '@renderer/lib/data/PlatformLoader';
 import { useModelContext } from '@renderer/store/ModelContext';
 import { useManagerMS } from '@renderer/store/useManagerMS';
 import { useSerialMonitor } from '@renderer/store/useSerialMonitor';
@@ -37,8 +38,18 @@ export const ManagerMSTab: React.FC<ManagerMSProps> = ({ devices, compilerData }
   const stateMachinesId = modelController.model.useData('', 'elements.stateMachinesId') as {
     [ID: string]: StateMachine;
   };
-  const [binOption, setBinOption] = useState<SelectOption | null>(null);
   const fileOption = 'file';
+  const binaryOptions = [
+    { label: 'Файл', value: fileOption, hint: 'Загрузить прошивку из файла' },
+  ].concat(
+    [...Object.entries(stateMachinesId)]
+      .filter(([, sm]) => sm.platform.toLowerCase().startsWith('tjc-ms1'))
+      .map(([id, sm]) => {
+        const platformHint = getPlatform(sm.platform)?.name ?? sm.platform;
+        return { value: id, label: sm.name ?? id, hint: platformHint };
+      })
+  );
+  const [binOption, setBinOption] = useState<SelectOption | null>(null);
   // При изменении log прокручиваем вниз, если включена автопрокрутка
   useLayoutEffect(() => {
     if (managerMSSetting?.autoScroll && logContainerRef.current) {
@@ -198,16 +209,6 @@ export const ManagerMSTab: React.FC<ManagerMSProps> = ({ devices, compilerData }
     }
     return false;
   };
-  const getBinaryOptions = () => {
-    const options = [{ label: 'Файл', value: fileOption, hint: 'Загрузить прошивку из файла' }];
-    return options.concat(
-      [...Object.entries(stateMachinesId)]
-        .filter(([, sm]) => sm.platform.toLowerCase().startsWith('tjc-ms1'))
-        .map(([id, sm]) => {
-          return { value: id, label: sm.name ?? id, hint: 'Загрузить прошивку из компилятора' };
-        })
-    );
-  };
   if (!managerMSSetting) {
     return null;
   }
@@ -240,7 +241,7 @@ export const ManagerMSTab: React.FC<ManagerMSProps> = ({ devices, compilerData }
           className="mr-4 w-56"
           isSearchable={false}
           placeholder="Выберите прошивку..."
-          options={getBinaryOptions()}
+          options={binaryOptions}
           value={binOption}
           onChange={(opt) => setBinOption(opt)}
           //isDisabled={currentDeviceID == undefined}
@@ -290,6 +291,7 @@ export const ManagerMSTab: React.FC<ManagerMSProps> = ({ devices, compilerData }
           setAddress(selectedAddress);
         }}
         isDuplicate={isDuplicate}
+        binaryOptions={binaryOptions}
       ></AddressBookModal>
     </section>
   );
