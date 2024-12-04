@@ -31,6 +31,8 @@ const colorNames = {
 
   'default-transition-color': '--d-t-c',
   'default-state-color': '--d-s-c',
+
+  'default-caret-color': '--d-c-c',
 } as const;
 type ColorNames = typeof colorNames;
 type ColorName = keyof ColorNames;

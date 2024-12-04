@@ -54,6 +54,7 @@ export default {
           '--d-n-c': '#FFFFFF',
           '--d-t-c': '#F2F2F2',
           '--d-s-c': '#F2F2F2',
+          '--d-c-c': '#FFFFFF',
         },
         ':root[data-theme="light"]': {
           '--p': '#0C4BEE',
@@ -91,6 +92,7 @@ export default {
           '--d-n-c': '#000000',
           '--d-t-c': '#404040',
           '--d-s-c': '#F2F2F2',
+          '--d-c-c': '#000000',
         },
       };
 
