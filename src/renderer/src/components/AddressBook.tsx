@@ -188,23 +188,26 @@ export const AddressBookModal: React.FC<AddressBookModalProps> = ({
               // перезапуск IDE может помочь в этом случае
               <p className="mx-2 my-2 flex text-text-inactive">Адресная книга не загрузилась</p>
             )}
-            {addressBookSetting?.map((field, index) => (
-              <div key={getID(index)}>
-                <AddressBookRow
-                  isSelected={index === selectedEntry} // не должно равняться нулю, так как это индекс заголовка таблицы
-                  data={field}
-                  checked={isChecked.get(index)}
-                  binaryOptions={binaryOptions}
-                  selectedBinary={selectedBinary.get(index)}
-                  onSelect={() => onSelect(index)}
-                  onEdit={() => onEdit(field, index)}
-                  onDragStart={() => onDragStart(index)}
-                  onDrop={() => onSwapEntries(index)}
-                  onCheck={() => onCheck(index)}
-                  onBinaryChange={(binary) => onBinaryChange(index, binary)}
-                ></AddressBookRow>
-              </div>
-            ))}
+            {addressBookSetting?.map((field, index) => {
+              const ID = getID(index);
+              return (
+                <div key={ID}>
+                  <AddressBookRow
+                    isSelected={index === selectedEntry} // не должно равняться нулю, так как это индекс заголовка таблицы
+                    data={field}
+                    checked={isChecked.get(ID)}
+                    binaryOptions={binaryOptions}
+                    selectedBinary={selectedBinary.get(ID)}
+                    onSelect={() => onSelect(index)}
+                    onEdit={() => onEdit(field, index)}
+                    onDragStart={() => onDragStart(index)}
+                    onDrop={() => onSwapEntries(index)}
+                    onCheck={() => onCheck(ID)}
+                    onBinaryChange={(binary) => onBinaryChange(ID, binary)}
+                  ></AddressBookRow>
+                </div>
+              );
+            })}
             {addressBookSetting?.length === 1 && (
               <p className="mx-2 my-2 flex text-text-inactive">Нет записей в книге</p>
             )}
