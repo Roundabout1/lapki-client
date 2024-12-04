@@ -148,20 +148,20 @@ export const AddressBookModal: React.FC<AddressBookModalProps> = ({
     onSubmit(addressBookSetting[selectedEntry].address);
     onClose();
   });
-  const onCheck = (index: number) => {
-    if (index === 0) return;
-    const currentChecked = isChecked.get(index) ?? false;
+  const onCheck = (ID: number) => {
+    if (ID === 0) return;
+    const currentChecked = isChecked.get(ID) ?? false;
     setIsChecked((oldValue) => {
       const newValue = new Map(oldValue);
-      newValue.set(index, !currentChecked);
+      newValue.set(ID, !currentChecked);
       return newValue;
     });
   };
-  const onBinaryChange = (index: number, binary: SelectOption) => {
-    if (index === 0) return;
+  const onBinaryChange = (ID: number, binary: SelectOption) => {
+    if (ID === 0) return;
     setSelectedBinary((oldValue) => {
       const newValue = new Map(oldValue);
-      newValue.set(index, binary);
+      newValue.set(ID, binary);
       return newValue;
     });
   };
