@@ -1,6 +1,11 @@
-import { MetaDataID } from '@renderer/types/FlasherTypes';
+import {
+  AddressData,
+  BinariesMsType,
+  FlashBacktrackMs,
+  MetaDataID,
+} from '@renderer/types/FlasherTypes';
 
-import { Device, MSDevice } from './Device';
+import { MSDevice } from './Device';
 import { Flasher } from './Flasher';
 
 export class ManagerMS {
@@ -18,6 +23,11 @@ export class ManagerMS {
     ['PULL_FIRMWARE', 'загрузка записанного кода прошивки для проверки...'],
     ['VERIFY_FIRMWARE', 'проверка целостности загруженной прошивки...'],
   ]);
+  private static flashQueue: BinariesMsType[] = [];
+  private static flashingAddress = '';
+  private static lastBacktrackLogIndex: number | null;
+  private static lastBacktrackStage: string = '';
+  private static logSize: number = 0;
 
   static bindReact(
     setDevice: (currentDevice: MSDevice | undefined) => void,
@@ -30,19 +40,21 @@ export class ManagerMS {
     this.setAddress = setAddress;
     this.setMeta = setMeta;
   }
-  static binStart(
-    device: MSDevice,
-    address: string,
-    verification: boolean = false,
-    serialMonitorDevice: Device | undefined = undefined,
-    serialConnectionStatus: string = ''
-  ) {
-    Flasher.flashPreparation(device, serialMonitorDevice, serialConnectionStatus);
+  static binAdd(binariesInfo: BinariesMsType) {
+    this.flashQueue.push(binariesInfo);
+  }
+  static binStart() {
+    const binariesInfo = this.flashQueue.shift();
+    if (!binariesInfo) return;
+    Flasher.setBinary(binariesInfo.binaries, binariesInfo.device);
+    Flasher.flashPreparation(binariesInfo.device);
+    this.flashingAddress = this.displayAddressInfo(binariesInfo.addressInfo);
+    ManagerMS.flashingAddressLog('Начат процесс прошивки...');
     Flasher.send('ms-bin-start', {
-      deviceID: device.deviceID,
+      deviceID: binariesInfo.device.deviceID,
       fileSize: Flasher.binary.size,
-      address: address,
-      verification: verification,
+      address: binariesInfo.addressInfo.address,
+      verification: binariesInfo.verification,
     });
   }
   static ping(deviceID: string, address: string) {
@@ -57,7 +69,30 @@ export class ManagerMS {
     });
   }
   static addLog(log: string) {
+    this.logSize++;
     this.setLog((prevMessages) => [...prevMessages, log]);
+  }
+  static editLog(log: string, index: number) {
+    this.setLog((prevMessages) => {
+      return prevMessages.map((msg, idx) => {
+        return index === idx ? log : msg;
+      });
+    });
+  }
+  static flashingAddressLogString(log: string) {
+    return `${this.flashingAddress}: ${log}`;
+  }
+  static flashingAddressLog(log: string) {
+    ManagerMS.addLog(this.flashingAddressLogString(log));
+  }
+  static flashingAddressEndLog(log: string) {
+    ManagerMS.flashingAddressLog(log);
+    this.lastBacktrackLogIndex = null;
+    this.lastBacktrackStage = '';
+    this.flashingAddress = '';
+  }
+  static flashingEditLog(log: string, index: number) {
+    this.editLog(this.flashingAddressLogString(log), index);
   }
   static reset(deviceID: string, address: string) {
     Flasher.send('ms-reset', {
@@ -71,13 +106,49 @@ export class ManagerMS {
       address: address,
     });
   }
-  static backtrack(log: string) {
-    const msg = this.backtrackMap.get(log);
+  static backtrack(backtrack: FlashBacktrackMs) {
+    const uploadStage = this.backtrackMap.get(backtrack.UploadStage);
     const status = 'Статус загрузки';
-    if (msg) {
-      ManagerMS.addLog(`${status}: ${msg}`);
-    } else {
-      ManagerMS.addLog(`${status}: получено неизвестное сообщение (${log}) от загрузчика`);
+    if (uploadStage === undefined) {
+      ManagerMS.flashingAddressLog(
+        `${status}: получено неизвестное сообщение (${uploadStage}) от загрузчика`
+      );
+      this.lastBacktrackLogIndex = null;
+      this.lastBacktrackStage = '';
+      return;
     }
+    const prefix = `${status}: ${uploadStage} `;
+    const progress =
+      backtrack.NoPacks || backtrack.TotalPacks === 1
+        ? ''
+        : ` ${backtrack.CurPack}/${backtrack.TotalPacks}`;
+    if (this.lastBacktrackLogIndex === null || this.lastBacktrackStage !== uploadStage) {
+      if (this.lastBacktrackLogIndex !== null) {
+        ManagerMS.flashingEditLog(
+          `${status}: ${this.lastBacktrackStage} Ок`,
+          this.lastBacktrackLogIndex
+        );
+      }
+      this.lastBacktrackLogIndex = this.logSize;
+      this.lastBacktrackStage = uploadStage;
+      ManagerMS.flashingAddressLog(prefix + progress);
+    } else {
+      ManagerMS.flashingEditLog(prefix + progress, this.lastBacktrackLogIndex);
+    }
+    if (!backtrack.NoPacks && backtrack.CurPack === backtrack.TotalPacks) {
+      this.lastBacktrackLogIndex = null;
+      this.lastBacktrackStage = '';
+    }
+  }
+  static displayAddressInfo(addressInfo: AddressData) {
+    const name = addressInfo.name === '' ? addressInfo.address : addressInfo.name;
+    const type = addressInfo.type ? ` (${addressInfo.type})` : '';
+    return name + type;
+  }
+  static clearLog() {
+    this.logSize = 0;
+    this.lastBacktrackLogIndex = null;
+    this.lastBacktrackStage = '';
+    this.setLog(() => []);
   }
 }
