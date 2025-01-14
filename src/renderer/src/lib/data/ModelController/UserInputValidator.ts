@@ -76,23 +76,23 @@ export class UserInputValidator {
       };
     }
 
-    // допустимыми символами на первой позиции являются латинские буквы и подчёркивания
-    const firstSymbolRegex = '[A-Z]|[a-z]|_';
+    // допустимыми символами на первой позиции являются буквы и подчёркивания
+    const firstSymbolRegex = '[A-Z]|[a-z]|_|[а-я]|[А-Я]';
     const numberSymbolRegex = '[0-9]';
     if (!componentName[0].match(firstSymbolRegex)) {
       return {
         status: false,
-        error: `Название должно начинаться с латинской буквы или подчёркивания`,
+        error: `Название должно начинаться с буквы или подчёркивания`,
       };
     }
 
-    // допустимыми символами на всех позициях кроме первой являются латинские буквы, подчёркивания и цифры
+    // допустимыми символами на всех позициях кроме первой являются буквы, подчёркивания и цифры
     const remainingSymbolsRegex = firstSymbolRegex + '|' + numberSymbolRegex;
     for (const symbol of componentName) {
       if (!symbol.match(remainingSymbolsRegex)) {
         return {
           status: false,
-          error: 'Допускаются только латинские буквы, цифры и подчёркивания',
+          error: 'Допускаются только буквы, цифры и подчёркивания',
         };
       }
     }
