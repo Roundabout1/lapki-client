@@ -52,6 +52,7 @@
     "find-free-port": "^2.0.0",
     "fix-path": "^3.0.0",
     "isomorphic-ws": "^5.0.0",
+    "js-base64": "^3.7.7",
     "lodash.debounce": "^4.0.8",
     "lodash.throttle": "^4.1.1",
     "lookpath": "^1.2.2",

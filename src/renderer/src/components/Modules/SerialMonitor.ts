@@ -1,3 +1,5 @@
+import { Base64 } from 'js-base64';
+
 import { Device } from './Device';
 import { Flasher } from './Flasher';
 
@@ -44,10 +46,10 @@ export class SerialMonitor {
     });
   }
 
-  static sendMessage(deviceID: string, message: Uint8Array) {
+  static sendMessage(deviceID: string, message: string) {
     Flasher.send('serial-send', {
       deviceID: deviceID,
-      msg: message,
+      msg: Base64.encode(message, true),
     });
   }
 

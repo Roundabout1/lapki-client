@@ -87,7 +87,7 @@ export const SerialMonitorTab: React.FC = () => {
       // Отправляем сообщение через SerialMonitor
       SerialMonitor.sendMessage(
         device?.deviceID,
-        new Uint8Array(Buffer.from(inputValue + LineBreakOptions[monitorSetting?.lineBreak].value))
+        inputValue + LineBreakOptions[monitorSetting?.lineBreak].value
       );
       setInputValue('');
     }

@@ -151,7 +151,7 @@ export type SerialConnect = {
 
 export type SerialMessage = {
   deviceID: string;
-  msg: Uint8Array;
+  msg: string;
 };
 
 export type SerialDisconnect = {

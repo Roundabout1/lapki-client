@@ -1,6 +1,7 @@
 import { Dispatch, SetStateAction } from 'react';
 
 import Websocket from 'isomorphic-ws';
+import { Base64 } from 'js-base64';
 
 import { Device, ArduinoDevice, MSDevice } from '@renderer/components/Modules/Device';
 import { Binary } from '@renderer/types/CompilerTypes';
@@ -562,7 +563,7 @@ export class Flasher extends ClientWS {
       }
       case 'serial-device-read': {
         const serialRead = response.payload as SerialMessage;
-        SerialMonitor.addDeviceMessage(serialRead.msg);
+        SerialMonitor.addDeviceMessage(Base64.decode(serialRead.msg));
         break;
       }
       case 'flash-open-serial-monitor':
