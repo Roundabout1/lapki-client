@@ -152,7 +152,7 @@ export type SerialConnect = {
 
 export type SerialRead = {
   deviceID: string;
-  msg: string;
+  msg: Uint8Array;
 };
 
 export type SerialDisconnect = {
@@ -161,7 +161,7 @@ export type SerialDisconnect = {
 
 export type SerialSend = {
   deviceID: string;
-  msg: string;
+  msg: Uint8Array;
 };
 
 export type SerialChangeBaud = {

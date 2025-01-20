@@ -44,7 +44,7 @@ export class SerialMonitor {
     });
   }
 
-  static sendMessage(deviceID: string, message: string) {
+  static sendMessage(deviceID: string, message: Uint8Array) {
     Flasher.send('serial-send', {
       deviceID: deviceID,
       msg: message,
