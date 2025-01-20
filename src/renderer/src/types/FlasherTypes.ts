@@ -69,9 +69,8 @@ export type FlasherPayload =
   | undefined
   | DeviceCommentCode
   | SerialConnect
-  | SerialRead
+  | SerialMessage
   | SerialDisconnect
-  | SerialSend
   | SerialChangeBaud
   | MSBinStart
   | MSGetAddress
@@ -150,18 +149,13 @@ export type SerialConnect = {
   baud: number;
 };
 
-export type SerialRead = {
+export type SerialMessage = {
   deviceID: string;
   msg: Uint8Array;
 };
 
 export type SerialDisconnect = {
   deviceID: string;
-};
-
-export type SerialSend = {
-  deviceID: string;
-  msg: Uint8Array;
 };
 
 export type SerialChangeBaud = {

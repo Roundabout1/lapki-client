@@ -10,7 +10,7 @@ import {
   UpdateDelete,
   FlashResult,
   DeviceCommentCode,
-  SerialRead,
+  SerialMessage,
   FlasherPayload,
   FlasherType,
   MetaDataID,
@@ -561,7 +561,7 @@ export class Flasher extends ClientWS {
         break;
       }
       case 'serial-device-read': {
-        const serialRead = response.payload as SerialRead;
+        const serialRead = response.payload as SerialMessage;
         SerialMonitor.addDeviceMessage(serialRead.msg);
         break;
       }
