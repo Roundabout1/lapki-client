@@ -49,7 +49,7 @@ export class SerialMonitor {
   static sendMessage(deviceID: string, message: string) {
     Flasher.send('serial-send', {
       deviceID: deviceID,
-      msg: Base64.encode(message, true),
+      msg: Base64.encode(message),
     });
   }
 
