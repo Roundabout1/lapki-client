@@ -41,7 +41,7 @@ export const StateMachineComponentList: React.FC<StateMachineComponentListProps>
     onRequestAddComponent,
     onRequestEditComponent,
     onRequestDeleteComponent,
-  } = useComponents(smId, controller);
+  } = useComponents(controller);
 
   const modelController = useModelContext();
   const model = modelController.model;
@@ -59,7 +59,14 @@ export const StateMachineComponentList: React.FC<StateMachineComponentListProps>
   const onDropComponent = (name: string) => {
     if (!dragName) return;
 
-    onSwapComponents(dragName, name);
+    /* 
+      Сюда приходят названия вида smId::componentId
+      Но в модели данных компоненты хранятся как componentId
+      Поэтому сплитим
+    */
+    const splittedDragName = dragName.split('::')[1];
+    const splittedName = name.split('::')[1];
+    onSwapComponents(smId, splittedDragName, splittedName);
   };
   const isDisabled = !isInitialized;
   return (
@@ -71,7 +78,7 @@ export const StateMachineComponentList: React.FC<StateMachineComponentListProps>
             type="button"
             className={'h-5 w-5 opacity-70 disabled:opacity-40'}
             disabled={isDisabled}
-            onClick={onRequestAddComponent}
+            onClick={() => onRequestAddComponent(smId, components)}
           >
             <AddIcon className="shrink-0" />
           </button>
@@ -99,10 +106,10 @@ export const StateMachineComponentList: React.FC<StateMachineComponentListProps>
                 }
                 isSelected={key === selectedComponent}
                 isDragging={key === dragName}
-                onCallContextMenu={() => onRequestEditComponent(name)}
+                onCallContextMenu={() => onRequestEditComponent(smId, components, name)}
                 onSelect={() => setSelectedComponent(key)}
-                onEdit={() => onRequestEditComponent(name)}
-                onDelete={() => onRequestDeleteComponent(name)}
+                onEdit={() => onRequestEditComponent(smId, components, name)}
+                onDelete={() => onRequestDeleteComponent(smId, components, name)}
                 onDragStart={() => setDragName(key)}
                 onDrop={() => onDropComponent(key)}
               />

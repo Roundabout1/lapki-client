@@ -1,6 +1,5 @@
 import { Dimensions, Point } from '@renderer/lib/types';
 
-// FIXME: в перспективе тип должен быть string | Variable
 export type ArgList = { [key: string]: string | number[][] | Variable };
 
 export type Action = {
@@ -86,11 +85,6 @@ export type Note = {
   backgroundColor?: string;
   textColor?: string;
   fontSize?: number;
-};
-
-//Получаем тип со всеми машинами состояний
-export type StateMachines = {
-  stateMachines: { [id: string]: Machine };
 };
 
 //Добавляем id для машины состояний, а также прилегающие к ней элементы, плюс выделение
