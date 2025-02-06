@@ -1,10 +1,12 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
+
+import { isEqual } from 'lodash';
 
 import { Modal } from '@renderer/components/UI';
 import { CanvasController } from '@renderer/lib/data/ModelController/CanvasController';
 import { State } from '@renderer/lib/drawable';
 import { useModelContext } from '@renderer/store/ModelContext';
-import { Action, EventData } from '@renderer/types/diagram';
+import { Action, Condition as ConditionData, Event, EventData } from '@renderer/types/diagram';
 
 import { Actions, Trigger, Condition } from './components';
 import { useTrigger, useActions, useCondition } from './hooks';
@@ -34,10 +36,10 @@ export const EditEventModal: React.FC<EditEventModalProps> = ({
   const modelController = useModelContext();
 
   // Данные формы
-  const trigger = useTrigger(smId, controller, true, event);
+  const trigger = useTrigger(smId, controller, true, event?.trigger as Event | null);
   const condition = useCondition(smId, controller, event?.condition);
   const actions = useActions(smId, controller, (event?.do as Action[] | undefined) ?? null);
-
+  const [error, setError] = useState<string | undefined>(undefined);
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -46,19 +48,24 @@ export const EditEventModal: React.FC<EditEventModalProps> = ({
     const { selectedComponent, selectedMethod } = trigger;
     const triggerText = trigger.text.trim();
 
-    // TODO(bryzZz) Нужно не просто не отправлять форму а показывать ошибки
     if (
       (trigger.tabValue === 0 && (!selectedComponent || !selectedMethod)) ||
       (trigger.tabValue === 1 && !triggerText)
     ) {
+      setError(`Необходимо выбрать триггер ("Когда")!`);
       return;
     }
 
-    if (
-      (actions.tabValue === 0 && actions.actions.length === 0) ||
-      (actions.tabValue === 1 && !actions.text.trim())
-    ) {
-      return;
+    if (selectedComponent === 'System') {
+      const duplicated = state.data.events.findIndex(
+        (val) =>
+          (val.trigger as unknown as Event).component === 'System' &&
+          (val.trigger as unknown as Event).method === selectedMethod
+      );
+      if (duplicated !== -1 && currentEventIndex !== duplicated) {
+        setError(`Повторение системого события ${selectedMethod}!`);
+        return;
+      }
     }
 
     const {
@@ -118,6 +125,22 @@ export const EditEventModal: React.FC<EditEventModalProps> = ({
       return condition.text.trim() || undefined;
     };
 
+    for (const eventIdx in state.data.events) {
+      if (currentEventIndex === Number(eventIdx)) continue;
+      const event = state.data.events[eventIdx];
+      const trigger = event.trigger as Event;
+      const condition = event.condition as ConditionData | undefined;
+      if (trigger.component === selectedComponent && trigger.method === selectedMethod) {
+        const newCondition = getCondition() as ConditionData | undefined;
+        if (isEqual(condition, newCondition)) {
+          setError(
+            `Событие ${selectedComponent}.${selectedMethod} с таким условием уже существует!`
+          );
+          return;
+        }
+      }
+    }
+
     const getTrigger = () => {
       if (trigger.tabValue === 0)
         return { component: selectedComponent as string, method: selectedMethod as string };
@@ -158,6 +181,7 @@ export const EditEventModal: React.FC<EditEventModalProps> = ({
     trigger.clear();
     actions.clear();
     condition.clear();
+    setError(undefined);
   };
 
   const showCondition = useMemo(
@@ -177,6 +201,7 @@ export const EditEventModal: React.FC<EditEventModalProps> = ({
         <Trigger event={event} {...trigger} />
         {showCondition && <Condition {...condition} />}
         <Actions event={event} {...actions} />
+        {error && <div className="text-error">{error}</div>}
       </div>
     </Modal>
   );
