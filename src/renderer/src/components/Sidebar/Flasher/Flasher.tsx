@@ -298,7 +298,7 @@ export const FlasherTab: React.FC = () => {
   }
 
   return (
-    <section className="mr-3 flex h-full flex-col bg-bg-secondary">
+    <section className="mr-3 flex h-full flex-col overflow-auto bg-bg-secondary scrollbar-thin scrollbar-track-scrollbar-track scrollbar-thumb-scrollbar-thumb">
       <label className="m-2">{handleCurrentDeviceDisplay()}</label>
       <div className="m-2 flex">
         <button className="btn-primary mr-4" onClick={handleGetAddress} disabled={noAccessToDevice}>
@@ -367,7 +367,7 @@ export const FlasherTab: React.FC = () => {
       </div>
       <div className="m-2">Журнал действий</div>
       <div
-        className="mx-2 h-72 overflow-y-auto whitespace-break-spaces bg-bg-primary scrollbar-thin scrollbar-track-scrollbar-track scrollbar-thumb-scrollbar-thumb"
+        className="mx-2 min-h-72 overflow-y-auto whitespace-break-spaces bg-bg-primary scrollbar-thin scrollbar-track-scrollbar-track scrollbar-thumb-scrollbar-thumb"
         ref={logContainerRef}
       >
         {log.map((msg, index) => (

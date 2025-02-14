@@ -240,7 +240,7 @@ export const FlasherTable: React.FC<FlasherTableProps> = ({
   return (
     <div
       {...props}
-      className="flex max-h-60 min-h-60 flex-col overflow-y-auto scrollbar-thin scrollbar-track-scrollbar-track scrollbar-thumb-scrollbar-thumb"
+      className="flex flex-col scrollbar-thin scrollbar-track-scrollbar-track scrollbar-thumb-scrollbar-thumb"
     >
       {headerRender()}
       {tableData.length > 0
