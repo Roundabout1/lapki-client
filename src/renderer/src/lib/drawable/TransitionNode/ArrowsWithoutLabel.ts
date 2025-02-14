@@ -23,15 +23,23 @@ export class ArrowsWithoutLabel implements Drawable {
     const sourceBounds = this.parent.source.drawBounds;
 
     const line = getLine({
-      rect1: { ...targetBounds, height: targetBounds.height + targetBounds.childrenHeight },
-      rect2: { ...sourceBounds, height: sourceBounds.height + sourceBounds.childrenHeight },
+      rect1: {
+        ...targetBounds,
+        height:
+          targetBounds.childrenHeight === 0 ? targetBounds.height : targetBounds.childrenHeight,
+      },
+      rect2: {
+        ...sourceBounds,
+        height:
+          sourceBounds.childrenHeight === 0 ? sourceBounds.height : sourceBounds.childrenHeight,
+      },
       rectPadding: 10,
     });
 
     const data = this.parent.data;
     const fillStyle = data.color ?? getColor('default-transition-color');
 
-    ctx.lineWidth = transitionStyle.width;
+    ctx.lineWidth = transitionStyle.width / this.app.controller.scale;
     ctx.strokeStyle = this.parent.data.color ?? getColor('default-transition-color');
     ctx.fillStyle = fillStyle;
 

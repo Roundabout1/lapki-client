@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import CodeMirror, { Transaction, EditorState, ReactCodeMirrorRef } from '@uiw/react-codemirror';
 import throttle from 'lodash.throttle';
@@ -7,13 +7,15 @@ import { ReactComponent as AddIcon } from '@renderer/assets/icons/add.svg';
 import { ReactComponent as SubtractIcon } from '@renderer/assets/icons/subtract.svg';
 import { ActionsModal } from '@renderer/components';
 import { TabPanel, Tabs } from '@renderer/components/UI';
-import { Action as ActionData, EventData } from '@renderer/types/diagram';
+import { EventData } from '@renderer/types/diagram';
 
 import { Action } from './Action';
 
 import { useActions } from '../hooks';
 
-type ActionsProps = ReturnType<typeof useActions> & { event: EventData | null | undefined };
+type ActionsProps = ReturnType<typeof useActions> & {
+  event: EventData | null | undefined;
+};
 
 /**
  * Блок действия в модалках редактирования нод
@@ -35,6 +37,7 @@ export const Actions: React.FC<ActionsProps> = (props) => {
     getComponentName,
     setActions,
     event,
+    parse,
   } = props;
   const visual = controller.useData('visual');
 
@@ -69,9 +72,10 @@ export const Actions: React.FC<ActionsProps> = (props) => {
     // return tr.startState.doc.length + tr.newDoc.length < 200;
   };
 
-  useEffect(() => {
-    setActions(event ? (event.do as ActionData[]) : []);
-  }, [event]);
+  useLayoutEffect(() => {
+    event && parse(smId, event.do);
+    // setActions(event && typeof event.do !== 'string' ? event.do : []);
+  }, [event, setActions]);
 
   const handleChangeText = useMemo(() => throttle(onChangeText, 500), [onChangeText]);
 
@@ -106,9 +110,16 @@ export const Actions: React.FC<ActionsProps> = (props) => {
 
       <div className="pl-4">
         <TabPanel value={0} tabValue={tabValue}>
-          <div className="flex gap-2">
+          <div onDoubleClick={onAddAction} className="flex gap-2">
             <div className="flex h-44 w-full flex-col overflow-y-auto break-words rounded border border-border-primary bg-bg-secondary scrollbar-thin scrollbar-track-scrollbar-track scrollbar-thumb-scrollbar-thumb">
-              {actions.length === 0 && <div className="mx-2 my-2 flex">(нет действий)</div>}
+              {actions.length === 0 && (
+                <div className="flex h-full w-full select-none flex-row items-center justify-center text-center align-middle text-text-inactive">
+                  <span className="mr-2">Чтобы добавить действие, нажмите</span>
+                  <div>
+                    <AddIcon className="btn-secondary h-5 w-5 cursor-default border-text-inactive p-[0.5px]" />
+                  </div>
+                </div>
+              )}
 
               {actions.map((data, i) => (
                 <Action
@@ -131,7 +142,12 @@ export const Actions: React.FC<ActionsProps> = (props) => {
               <button type="button" className="btn-secondary p-1" onClick={onAddAction}>
                 <AddIcon />
               </button>
-              <button type="button" className="btn-secondary p-1" onClick={handleClickDelete}>
+              <button
+                type="button"
+                className="btn-secondary p-1"
+                onClick={handleClickDelete}
+                disabled={selectedActionIndex === null}
+              >
                 <SubtractIcon />
               </button>
             </div>
