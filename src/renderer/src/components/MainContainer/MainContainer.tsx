@@ -104,10 +104,8 @@ export const MainContainer: React.FC = () => {
       return;
     }
 
-    if (!basename && restoreSession && !isInitialized) {
-      if (!isRestoreDataModalOpen) {
-        openRestoreDataModal();
-      }
+    if (!basename && restoreSession && !isInitialized && !isRestoreDataModalOpen) {
+      openRestoreDataModal();
       return;
     }
 
