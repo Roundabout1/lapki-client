@@ -3,6 +3,7 @@
 */
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 
+import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
 import { ClientStatus } from '@renderer/components/Modules/Websocket/ClientStatus';
@@ -11,9 +12,15 @@ import { useModal } from '@renderer/hooks/useModal';
 import { useSettings } from '@renderer/hooks/useSettings';
 import { useFlasher } from '@renderer/store/useFlasher';
 import { useManagerMS } from '@renderer/store/useManagerMS';
-import { FirmwareTargetType, FlashTableItem, OperationType } from '@renderer/types/FlasherTypes';
+import {
+  AddressData,
+  FirmwareTargetType,
+  FlashTableItem,
+  OperationType,
+} from '@renderer/types/FlasherTypes';
 
 import { AddressBookModal } from './AddressBook';
+import { AddressEntryEditModal } from './AddressEntryModal';
 import { FlasherTable } from './FlasherTable';
 import { MsGetAddressModal } from './MsGetAddressModal';
 
@@ -45,6 +52,11 @@ export const FlasherTab: React.FC = () => {
 
   const [isAddressBookOpen, openAddressBook, closeAddressBook] = useModal(false);
   const [isMsGetAddressOpen, openMsGetAddressModal, closeMsGetAddressModal] = useModal(false);
+
+  const [isAddressEnrtyEditOpen, openAddressEnrtyEdit, closeAddressEnrtyEdit] = useModal(false); // для редактирования существующих записей в адресной книге
+  const addressEntryEditForm = useForm<AddressData>();
+  const [isAddressEnrtyAddOpen, openAddressEnrtyAdd, closeAddressEnrtyAdd] = useModal(false); // для добавления новых записей в адресную книгу
+  const addressEntryAddForm = useForm<AddressData>();
 
   const [flashTableData, setFlashTableData] = useState<FlashTableItem[]>([]);
 
@@ -239,7 +251,7 @@ export const FlasherTab: React.FC = () => {
         }
         if (binData !== null) {
           ManagerMS.binAdd({
-            addressInfo: addressBookSetting[entry.address],
+            addressInfo: entry,
             device: device,
             verification: managerMSSetting ? managerMSSetting.verification : false,
             binaries: new Blob([binData]),
@@ -247,17 +259,16 @@ export const FlasherTab: React.FC = () => {
           });
         }
       } else {
-        if (!compilerData) continue;
+        const noBinary = `${ManagerMS.displayAddressInfo(
+          entry
+        )}: отсутствуют бинарные данные для выбранной машины состояния. Перейдите во вкладку компилятор, чтобы скомпилировать схему.`;
+        if (!compilerData) {
+          ManagerMS.addLog(noBinary);
+          continue;
+        }
         const smData = compilerData.state_machines[item.source];
         if (!smData || !smData.binary || smData.binary.length === 0) {
-          // ManagerMS.addLog(
-          //   `Ошибка! Загрузка по адресу ${displayEntry(
-          //     addressIndex
-          //   )} невозможна! Отсутствуют бинарные данные для машины состояния ${item.target}.`
-          // );
-          ManagerMS.addLog(
-            `Ошибка! Загрузка невозможна! Отсутствуют бинарные данные для машины состояния ${item.source}.`
-          );
+          ManagerMS.addLog(noBinary);
           continue;
         }
         ManagerMS.binAdd({
@@ -293,6 +304,33 @@ export const FlasherTab: React.FC = () => {
     return `${prefix}: устройство ${device.displayName()} подключено`;
   };
 
+  /**
+   * Обновление адресной книги после редактирования
+   */
+  const addressEntryEditSubmitHandle = (data: AddressData) => {
+    if (addressBookSetting === null) return;
+    // TODO: найти более оптимальный вариант
+    const index = addressBookSetting.findIndex((entry) => {
+      return entry.address === data.address;
+    });
+    if (index === -1) return;
+    onEdit(data, index);
+  };
+
+  const addressEntryAddSubmitHandle = (data: AddressData) => {
+    addressEntryAddForm.reset();
+    onAdd(data);
+  };
+
+  /**
+   * Открытие модального окна для редактирования существующей записи в адресной книге
+   * @param data данные, которые нужно отредактированть
+   */
+  const addressEnrtyEdit = (data: AddressData) => {
+    addressEntryEditForm.reset(data);
+    openAddressEnrtyEdit();
+  };
+
   if (!managerMSSetting) {
     return null;
   }
@@ -300,7 +338,7 @@ export const FlasherTab: React.FC = () => {
   return (
     <section className="mr-3 flex h-full flex-col bg-bg-secondary">
       <label className="m-2">{handleCurrentDeviceDisplay()}</label>
-      <div className="m-2 flex">
+      <div className="m-2">
         <button className="btn-primary mr-4" onClick={handleGetAddress} disabled={noAccessToDevice}>
           Подключить плату
         </button>
@@ -311,12 +349,13 @@ export const FlasherTab: React.FC = () => {
       <div className="m-2">
         <label>Устройства на прошивку</label>
         <FlasherTable
+          addressEnrtyEdit={addressEnrtyEdit}
           getEntryById={getEntryById}
           setTableData={setFlashTableData}
           tableData={flashTableData}
         />
       </div>
-      <div className="m-2 flex">
+      <div className="m-2 flex overflow-y-auto">
         <WithHint hint={'Убрать отмеченные платы из таблицы.'}>
           {(hintProps) => (
             <button {...hintProps} className="btn-error mr-6" onClick={handleRemoveDevs}>
@@ -411,8 +450,6 @@ export const FlasherTab: React.FC = () => {
         }}
         addressBookSetting={addressBookSetting}
         getID={getID}
-        onAdd={onAdd}
-        onEdit={onEdit}
         onRemove={(index) => {
           const id = getID(index);
           if (id !== null) {
@@ -421,6 +458,26 @@ export const FlasherTab: React.FC = () => {
           onRemove(index);
         }}
         onSwapEntries={onSwapEntries}
+        addressEnrtyEdit={addressEnrtyEdit}
+        openAddressEnrtyAdd={openAddressEnrtyAdd}
+      />
+      <AddressEntryEditModal
+        addressBookSetting={addressBookSetting}
+        form={addressEntryEditForm}
+        isOpen={isAddressEnrtyEditOpen}
+        onClose={closeAddressEnrtyEdit}
+        onSubmit={addressEntryEditSubmitHandle}
+        submitLabel="Сохранить"
+        allowAddressEdit={false}
+      />
+      <AddressEntryEditModal
+        addressBookSetting={addressBookSetting}
+        form={addressEntryAddForm}
+        isOpen={isAddressEnrtyAddOpen}
+        onClose={closeAddressEnrtyAdd}
+        onSubmit={addressEntryAddSubmitHandle}
+        submitLabel="Добавить"
+        allowAddressEdit={true}
       />
       <MsGetAddressModal
         isOpen={isMsGetAddressOpen}
