@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect } from 'react';
 
 import { useDropzone } from 'react-dropzone';
 import { Toaster } from 'sonner';
@@ -15,8 +15,9 @@ import {
   EditorSettings,
 } from '@renderer/components';
 import { hideLoadingOverlay } from '@renderer/components/utils/OverlayControl';
-import { useErrorModal, useFileOperations, useSettings } from '@renderer/hooks';
+import { useErrorModal, useFileOperations } from '@renderer/hooks';
 import { useAppTitle } from '@renderer/hooks/useAppTitle';
+import { useAutoSave } from '@renderer/hooks/useAutoSave';
 import { useModal } from '@renderer/hooks/useModal';
 import {
   getPlatformsErrors,
@@ -36,22 +37,16 @@ export const MainContainer: React.FC = () => {
   const controller = modelController.controllers[headControllerId];
   const isMounted = controller.useData('isMounted') as boolean;
   const [isCreateSchemeModalOpen, openCreateSchemeModal, closeCreateSchemeModal] = useModal(false);
-  const [autoSaveSettings] = useSettings('autoSave');
-  const [restoreSession] = useSettings('restoreSession');
-  const [isRestoreDataModalOpen, openRestoreDataModal, closeRestoreDataModal] = useModal(false);
-  const isStale = modelController.model.useData('', 'isStale');
-  const isInitialized = modelController.model.useData('', 'isInitialized');
-  const basename = modelController.model.useData('', 'basename');
 
   const { errorModalProps, openLoadError, openPlatformError, openSaveError, openImportError } =
     useErrorModal();
-  const { saveModalProps, operations, performNewFile, handleOpenFromTemplate, tempSaveOperations } =
-    useFileOperations({
-      openLoadError,
-      openCreateSchemeModal,
-      openSaveError,
-      openImportError,
-    });
+  const { saveModalProps, operations, performNewFile, handleOpenFromTemplate } = useFileOperations({
+    openLoadError,
+    openCreateSchemeModal,
+    openSaveError,
+    openImportError,
+  });
+  const { restoreDataModalProps, deleteTempSave } = useAutoSave();
 
   useAppTitle();
   const onDrop = useCallback(
@@ -84,54 +79,6 @@ export const MainContainer: React.FC = () => {
     });
   }, [openPlatformError]);
 
-  const restoreData = async () => {
-    //  (Roundabout) TODO: обработка ошибок загрузки
-    await tempSaveOperations.loadTempSave();
-  };
-
-  const cancelRestoreData = async () => {
-    await tempSaveOperations.deleteTempSave();
-  };
-
-  // автосохранение
-  useEffect(() => {
-    if (autoSaveSettings === null || restoreSession === null || saveModalProps.isOpen) return;
-
-    if (autoSaveSettings.disabled) {
-      if (restoreSession) {
-        cancelRestoreData();
-      }
-      return;
-    }
-
-    if (!basename && restoreSession && !isInitialized && !isRestoreDataModalOpen) {
-      openRestoreDataModal();
-      return;
-    }
-
-    if (basename && isInitialized && restoreSession) {
-      tempSaveOperations.deleteTempSave();
-    }
-
-    if (!isStale || !isInitialized) return;
-
-    const ms = autoSaveSettings.interval * 1000;
-    let interval: NodeJS.Timeout;
-    if (basename) {
-      interval = setInterval(async () => {
-        await operations.onRequestSaveFile();
-      }, ms);
-    } else {
-      interval = setInterval(async () => {
-        console.log('temp save...');
-        await tempSaveOperations.tempSave();
-      }, ms);
-    }
-
-    //Clearing the intervals
-    return () => clearInterval(interval);
-  }, [autoSaveSettings, isStale, isInitialized, basename, restoreSession, saveModalProps]);
-
   return (
     <div className="h-screen select-none">
       <div className="flex h-full w-full flex-row overflow-x-hidden">
@@ -162,7 +109,7 @@ export const MainContainer: React.FC = () => {
         {isMounted && <DiagramContextMenu />}
       </div>
 
-      <SaveRemindModal {...saveModalProps} />
+      <SaveRemindModal {...saveModalProps} deleteTempSave={deleteTempSave} />
       <ErrorModal {...errorModalProps} />
       <CreateSchemeModal
         isOpen={isCreateSchemeModalOpen}
@@ -182,12 +129,7 @@ export const MainContainer: React.FC = () => {
         }}
       />
 
-      <RestoreDataModal
-        isOpen={isRestoreDataModalOpen}
-        onClose={closeRestoreDataModal}
-        onRestore={restoreData}
-        onCancelRestore={cancelRestoreData}
-      ></RestoreDataModal>
+      <RestoreDataModal {...restoreDataModalProps} />
     </div>
   );
 };

@@ -11,10 +11,6 @@ import { useTabs } from '@renderer/store/useTabs';
 import { Elements } from '@renderer/types/diagram';
 import { isLeft, isRight, unwrapEither } from '@renderer/types/Either';
 
-import { useSettings } from './useSettings';
-
-const tempSaveKey = 'tempSave';
-
 interface useFileOperationsArgs {
   openLoadError: (cause: any) => void;
   openSaveError: (cause: any) => void;
@@ -30,7 +26,6 @@ export const useFileOperations = (args: useFileOperationsArgs) => {
   const name = modelController.model.useData('', 'name') as string | null;
   const isStale = modelController.model.useData('', 'isStale');
   const [clearTabs, openTab] = useTabs((state) => [state.clearTabs, state.openTab]);
-  const [restoreSession, setRestoreSession] = useSettings('restoreSession');
 
   const [data, setData] = useState<SaveModalData | null>(null);
   const [isOpen, setIsOpen] = useState(false);
@@ -200,38 +195,15 @@ export const useFileOperations = (args: useFileOperationsArgs) => {
       openTabs();
     }
   };
-  /**
-   * Временное сохранение схемы в localstorage
-   */
-  const tempSave = async () => {
-    window.localStorage.setItem(tempSaveKey, modelController.model.serializer.getAll('Cyberiada'));
-    if (!restoreSession) {
-      await setRestoreSession(true);
-    }
-  };
 
-  const loadTempSave = async () => {
-    const restoredData = window.localStorage.getItem(tempSaveKey);
-    if (restoredData === null) {
-      return false;
-    }
-    const parsedData = importGraphml(restoredData, openImportError);
+  const initParseData = (graphmlData: string) => {
+    const parsedData = importGraphml(graphmlData, openImportError);
     if (parsedData === undefined) {
       return false;
     }
     modelController.initData(null, 'Без названия', parsedData, true);
     openTabs();
-    if (!restoreSession) {
-      await setRestoreSession(true);
-    }
     return true;
-  };
-
-  const deleteTempSave = async () => {
-    window.localStorage.removeItem(tempSaveKey);
-    if (restoreSession) {
-      await setRestoreSession(false);
-    }
   };
 
   useEffect(() => {
@@ -262,7 +234,7 @@ export const useFileOperations = (args: useFileOperationsArgs) => {
   }, [handleSaveFile, model]);
 
   return {
-    saveModalProps: { isOpen, onClose, data, deleteTempSave },
+    saveModalProps: { isOpen, onClose, data },
     operations: {
       onRequestNewFile: handleNewFile,
       onRequestOpenFile: handleOpenFile,
@@ -271,12 +243,8 @@ export const useFileOperations = (args: useFileOperationsArgs) => {
       onRequestImportFile: handleImportFile,
     },
     initImportData,
+    initParseData,
     performNewFile,
     handleOpenFromTemplate,
-    tempSaveOperations: {
-      tempSave,
-      loadTempSave,
-      deleteTempSave,
-    },
   };
 };
