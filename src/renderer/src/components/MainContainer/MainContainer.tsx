@@ -38,7 +38,6 @@ export const MainContainer: React.FC = () => {
   const [isCreateSchemeModalOpen, openCreateSchemeModal, closeCreateSchemeModal] = useModal(false);
   const [autoSaveSettings] = useSettings('autoSave');
   const [restoreSession] = useSettings('restoreSession');
-  const [isReservedDataPresent, setIsReservedPresent] = useState<boolean>(false); // Схема без названия сохранена, либо загружена
   const [isRestoreDataModalOpen, openRestoreDataModal, closeRestoreDataModal] = useModal(false);
   const isStale = modelController.model.useData('', 'isStale');
   const isInitialized = modelController.model.useData('', 'isInitialized');
@@ -88,12 +87,10 @@ export const MainContainer: React.FC = () => {
   const restoreData = async () => {
     //  (Roundabout) TODO: обработка ошибок загрузки
     await tempSaveOperations.loadTempSave();
-    setIsReservedPresent(true);
   };
 
   const cancelRestoreData = async () => {
     await tempSaveOperations.deleteTempSave();
-    setIsReservedPresent(true);
   };
 
   // автосохранение
@@ -107,25 +104,15 @@ export const MainContainer: React.FC = () => {
       return;
     }
 
-    if (isInitialized && !isReservedDataPresent) {
-      setIsReservedPresent(true);
-      return;
-    }
-
-    if (!basename && restoreSession && !isReservedDataPresent) {
+    if (!basename && restoreSession && !isInitialized) {
       if (!isRestoreDataModalOpen) {
         openRestoreDataModal();
       }
       return;
     }
 
-    if (basename && isInitialized) {
-      if (!isReservedDataPresent) {
-        setIsReservedPresent(true);
-      }
-      if (restoreSession) {
-        tempSaveOperations.deleteTempSave();
-      }
+    if (basename && isInitialized && restoreSession) {
+      tempSaveOperations.deleteTempSave();
     }
 
     if (!isStale || !isInitialized) return;
@@ -140,21 +127,12 @@ export const MainContainer: React.FC = () => {
       interval = setInterval(async () => {
         console.log('temp save...');
         await tempSaveOperations.tempSave();
-        if (!isReservedDataPresent) setIsReservedPresent(true);
       }, ms);
     }
 
     //Clearing the intervals
     return () => clearInterval(interval);
-  }, [
-    autoSaveSettings,
-    isStale,
-    isInitialized,
-    basename,
-    restoreSession,
-    isReservedDataPresent,
-    saveModalProps,
-  ]);
+  }, [autoSaveSettings, isStale, isInitialized, basename, restoreSession, saveModalProps]);
 
   return (
     <div className="h-screen select-none">
