@@ -273,16 +273,17 @@ export class EditorView extends EventEmitter<EditorViewEvents> implements Drawab
       const downY =
         this.mouseDownNode.computedPosition.y +
         Math.max(this.mouseDownNode.childrenContainerHeight, this.mouseDownNode.computedHeight);
-      if (leftX < 20 && e.dx < 0) {
+      const border = 20;
+      if (leftX < border && e.dx < 0) {
         this.app.controller.offset.x -= e.dx * this.app.controller.scale;
       }
-      if (upY < 20 && e.dy < 0) {
+      if (upY < border && e.dy < 0) {
         this.app.controller.offset.y -= e.dy * this.app.controller.scale;
       }
-      if (rightX > this.app.canvas.width - 20 && e.dx > 0) {
+      if (rightX > this.app.canvas.width - border && e.dx > 0) {
         this.app.controller.offset.x -= e.dx * this.app.controller.scale;
       }
-      if (downY > this.app.canvas.height - 20 && e.dy > 0) {
+      if (downY > this.app.canvas.height - border && e.dy > 0) {
         this.app.controller.offset.y -= e.dy * this.app.controller.scale;
       }
       this.mouseDownNode.handleMouseMove(e);
