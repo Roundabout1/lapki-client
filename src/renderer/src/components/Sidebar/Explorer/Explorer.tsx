@@ -50,15 +50,17 @@ export const Explorer: React.FC = () => {
           onExpand={forceUpdate}
           className="px-4"
         >
-          <button className="my-3 flex items-center" onClick={() => togglePanel(componentPanelRef)}>
-            <ArrowIcon
-              className={twMerge(
-                'rotate-0 transition-transform',
-                componentPanelRef.current?.isCollapsed() && '-rotate-90'
-              )}
-            />
+          <div className="my-3 flex items-center">
+            <button onClick={() => togglePanel(componentPanelRef)}>
+              <ArrowIcon
+                className={twMerge(
+                  'rotate-0 transition-transform',
+                  componentPanelRef.current?.isCollapsed() && '-rotate-90'
+                )}
+              />
+            </button>
             <h3 className="font-semibold">Компоненты</h3>
-          </button>
+          </div>
 
           {isInitialized ? <ComponentsList /> : 'Недоступно до открытия схемы'}
         </Panel>
@@ -77,15 +79,17 @@ export const Explorer: React.FC = () => {
           onExpand={forceUpdate}
           className="px-4"
         >
-          <button className="my-3 flex items-center" onClick={() => togglePanel(hierarchyPanelRef)}>
-            <ArrowIcon
-              className={twMerge(
-                'rotate-0 transition-transform',
-                hierarchyPanelRef.current?.isCollapsed() && '-rotate-90'
-              )}
-            />
+          <div className="my-3 flex items-center">
+            <button onClick={() => togglePanel(hierarchyPanelRef)}>
+              <ArrowIcon
+                className={twMerge(
+                  'rotate-0 transition-transform',
+                  hierarchyPanelRef.current?.isCollapsed() && '-rotate-90'
+                )}
+              />
+            </button>
             <h3 className="font-semibold">Иерархия</h3>
-          </button>
+          </div>
 
           {isInitialized ? <StateMachinesHierarchy /> : 'Недоступно до открытия схемы'}
         </Panel>
