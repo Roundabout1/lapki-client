@@ -67,6 +67,7 @@ export const Explorer: React.FC = () => {
           const hierarchyPanelId = mainPanelId + '-hierarchy';
           return (
             <Panel
+              key={mainPanelId}
               id={mainPanelId}
               ref={(node) => refCallback(node, mainPanelId)}
               collapsible
