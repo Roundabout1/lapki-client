@@ -1,8 +1,8 @@
 {
-  "name": "Кибермишка",
+  "name": "КиберМишка",
   "id": "blg-mb-1-a7",
   "nameTag": "CyBear",
-  "description": "Платформа для программирования Кибермишки blg-mb-1-a7.",
+  "description": "Платформа для программирования КиберМишки blg-mb-1-a7.",
   "icon": "",
   "staticComponents": false,
   "version": "1.0",
@@ -83,26 +83,27 @@
       "img": "arduino/button.svg",
       "signals": {
         "isPressed": {
-          "alias": "Нажата",
+          "alias": "Зажата",
           "img": "arduino/isPressed.svg",
-          "description": "Создает сигнал, если кнопка была нажата.",
+          "description": "Это событие вызывается до тех пор, пока кнопка зажата.",
           "checkMethod": "isPressed"
         },
-        "isClicked": {
-          "alias": "Зажата",
+        "clicked": {
+          "alias": "Клик",
           "img": "arduino/clicked.svg",
-          "description": "Создает сигнал, если кнопка была нажата, а затем отпущена.",
+          "description": "Кнопку быстро нажали и отпустили.",
           "checkMethod": "isClicked"
         },
         "isReleased": {
           "alias": "Отжата",
           "img": "common/isReleased.svg",
-          "description": "Создает сигнал, если кнопка была отпущена.",
+          "description": "Кнопка отпущена.",
           "checkMethod": "isReleased"
         }
       },
       "constructorParameters": {
-        "Где": {
+        "pin": {
+          "name": "Где",
           "type": ["1", "2", "3", "4", "5", "6"],
           "valueAlias": [
             "Правая лапа",
@@ -117,7 +118,7 @@
       },
       "variables": {
         "value": {
-          "alias": "значение",
+          "alias": "Значение",
           "img": "common/value.svg",
           "type": "int",
           "description": "Текущее значение на пине"
@@ -164,7 +165,7 @@
         "isNoteEnd": {
           "img": "arduino/timer-start.svg",
           "description": "Проигрывание ноты только что завершилось.",
-          "checkMethod": "isSoundEnd",
+          "checkMethod": "isNoteEnd",
           "alias": "Нота сыграна"
         }
       },
@@ -179,17 +180,35 @@
       ],
       "importFiles": ["SpeakerNote.hpp"],
       "methods": {
-        "play": {
+        "setupNote": {
           "img": "arduino/start.svg",
           "parameters": [
             {
-              "name": "нота",
-              "type": ["&TestNote"],
-              "valueAlias": ["Тестовая нота"],
+              "name": "Нота",
+              "type": ["c", "cH", "d", "dH", "e", "f", "fH", "g", "gH", "a", "b", "h"],
+              "valueAlias": ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "H"],
               "description": "Проигрываемая нота.",
+              "optional": false
+            },
+            {
+              "name": "Амплитуда",
+              "type": "uint16_t",
+              "description": "Амплитуда звука. От 0 до 2047.",
+              "optional": false
+            },
+            {
+              "name": "Время",
+              "type": "uint16_t",
+              "description": "Длительность звука (мс). От 0 до 65535.",
               "optional": false
             }
           ],
+          "alias": "Настроить ноту",
+          "description": "Настройка ноты"
+        },
+        "play": {
+          "img": "arduino/start.svg",
+          "parameters": [],
           "alias": "Запустить ноту",
           "description": "Запустить таймер. После запуска раз в заданный интервал будет вызываться событие [таймаут]"
         },
@@ -224,14 +243,30 @@
           "img": "arduino/start.svg",
           "parameters": [
             {
-              "name": "звук",
-              "type": ["&TestSound", "&SineSound"],
-              "valueAlias": ["Тестовый звук", "Рычание"],
+              "name": "Звук",
+              "type": [
+                "&SineSound",
+                "&SqueakSound",
+                "&BeepBeepSound",
+                "&LaserSound",
+                "&WaterDropSound",
+                "&RubleSound",
+                "&SirenSound"
+              ],
+              "valueAlias": [
+                "Рычание",
+                "Писк",
+                "Бип-Бип",
+                "Лазер",
+                "Капля воды",
+                "Бурчание",
+                "Сирена"
+              ],
               "description": "Проигрываемый звук.",
               "optional": false
             },
             {
-              "name": "время",
+              "name": "Время",
               "type": "uint16_t",
               "description": "Длительность звука (мс). От 0 до 65535.",
               "optional": false
@@ -269,7 +304,7 @@
           "img": "blg-mb/setupEvent.svg",
           "parameters": [
             {
-              "name": "порог",
+              "name": "Порог",
               "type": "uint16_t",
               "description": "Пороговое значение для события. От 0 до 4095.",
               "optional": false
@@ -284,7 +319,7 @@
           "img": "common/value.svg",
           "type": "uint16_t",
           "description": "Воспринимаемая яркость, в виде числа от 0 до 4095.",
-          "alias": "яркость"
+          "alias": "Яркость"
         }
       },
       "buildFiles": ["PhotoDiode.hpp"],
@@ -301,10 +336,10 @@
       "variables": {},
       "methods": {
         "setColorPaletteRight": {
-          "img": "blg-mb/setColorPalette.svg",
+          "img": "blg-mb/setColorPaletteRight.svg",
           "parameters": [
             {
-              "name": "цвет",
+              "name": "Цвет",
               "type": [
                 "&ColorRed",
                 "&ColorReddish",
@@ -343,10 +378,10 @@
           "alias": "Установить цвет правого глаза"
         },
         "setColorPaletteLeft": {
-          "img": "blg-mb/setColorPalette.svg",
+          "img": "blg-mb/setColorPaletteLeft.svg",
           "parameters": [
             {
-              "name": "цвет",
+              "name": "Цвет",
               "type": [
                 "&ColorRed",
                 "&ColorReddish",
@@ -406,28 +441,28 @@
       "variables": {},
       "methods": {
         "setColorRight": {
-          "img": "blg-mb/setColor.svg",
+          "img": "blg-mb/setColorRight.svg",
           "parameters": [
             {
-              "name": "красный",
+              "name": "Красный",
               "type": "uint8_t",
               "description": "Продолжительность красного (R) свечения. От 0 до 255.",
               "optional": false
             },
             {
-              "name": "зелёный",
+              "name": "Зелёный",
               "type": "uint8_t",
               "description": "Продолжительность зелёного (G) свечения. От 0 до 255.",
               "optional": false
             },
             {
-              "name": "синий",
+              "name": "Синий",
               "type": "uint8_t",
               "description": "Продолжительность синего (B) свечения. От 0 до 255.",
               "optional": false
             },
             {
-              "name": "чёрный",
+              "name": "Чёрный",
               "type": "uint8_t",
               "description": "Длительность выключения всех трёх светодиодов. Регулирует яркость. От 0 до 255.",
               "optional": false
@@ -438,28 +473,28 @@
         },
 
         "setColorLeft": {
-          "img": "blg-mb/setColor.svg",
+          "img": "blg-mb/setColorLeft.svg",
           "parameters": [
             {
-              "name": "красный",
+              "name": "Красный",
               "type": "uint8_t",
               "description": "Продолжительность красного (R) свечения. От 0 до 255.",
               "optional": false
             },
             {
-              "name": "зелёный",
+              "name": "Зелёный",
               "type": "uint8_t",
               "description": "Продолжительность зелёного (G) свечения. От 0 до 255.",
               "optional": false
             },
             {
-              "name": "синий",
+              "name": "Синий",
               "type": "uint8_t",
               "description": "Продолжительность синего (B) свечения. От 0 до 255.",
               "optional": false
             },
             {
-              "name": "чёрный",
+              "name": "Чёрный",
               "type": "uint8_t",
               "description": "Длительность выключения всех трёх светодиодов. Регулирует яркость. От 0 до 255.",
               "optional": false
@@ -513,7 +548,7 @@
           "img": "blg-mb/volumeThreshold.svg",
           "parameters": [
             {
-              "name": "громкость",
+              "name": "Громкость",
               "type": "uint16_t",
               "description": "Уровень громкости для события. От 0 до 65535.",
               "optional": false
@@ -540,19 +575,19 @@
           "description": "Включить или выключить светодиод.",
           "parameters": [
             {
-              "name": "строка",
+              "name": "Строка",
               "type": "uint8_t",
               "description": "Номер строки, на которой расположен светодиод."
             },
             {
-              "name": "столбец",
+              "name": "Столбец",
               "type": "uint8_t",
               "description": "Номер столбца, на котором расположен светодиод."
             },
             {
-              "name": "действие",
+              "name": "Действие",
               "type": ["0", "1"],
-              "valueAlias": ["включить", "выключить"],
+              "valueAlias": ["Выключить", "Включить"],
               "description": "Включение, либо выключение светодиода."
             }
           ]
@@ -563,7 +598,7 @@
           "description": "Изобразить рисунок на матрице.",
           "parameters": [
             {
-              "name": "рисунок",
+              "name": "Рисунок",
               "type": "Matrix5x7",
               "description": "Рисунок, который будет изображен на матрице."
             }
@@ -575,7 +610,7 @@
           "description": "Установить уровень яркости на все светодиоды.",
           "parameters": [
             {
-              "name": "уровень",
+              "name": "Уровень",
               "type": "uint8_t",
               "description": "Уровень яркости, который будет установлен на каждый светодиод."
             }
@@ -593,22 +628,22 @@
           "description": "Включить или выключить светодиод, используя битовую маску.",
           "parameters": [
             {
-              "name": "строка",
+              "name": "Строка",
               "type": "uint8_t",
               "description": "Номер строки, на которой расположен светодиод."
             },
             {
-              "name": "столбец",
+              "name": "Столбец",
               "type": "uint8_t",
               "description": "Номер столбца, на котором расположен светодиод."
             },
             {
-              "name": "значение",
+              "name": "Значение",
               "type": ["0", "1"],
               "description": "Второй параметр применяемой функции. Первый – текущее значение светодиода. Значение 0 соответствует выключенному светодиоду, а 1 – включенному."
             },
             {
-              "name": "операция",
+              "name": "Операция",
               "type": ["mask_and", "mask_or", "mask_xor"],
               "valueAlias": ["AND", "OR", "XOR"],
               "description": "Битовая функция, используемая для установки значения."
@@ -621,12 +656,12 @@
           "description": "Изобразить рисунок на матрице, используя битовую маску.",
           "parameters": [
             {
-              "name": "рисунок",
+              "name": "Рисунок",
               "type": "Matrix5x7",
               "description": "Рисунок, который будет изображен на матрице."
             },
             {
-              "name": "операция",
+              "name": "Операция",
               "type": ["mask_and", "mask_or", "mask_xor"],
               "valueAlias": ["AND", "OR", "XOR"],
               "description": "Битовая маска для установки значения пикселя."
@@ -665,15 +700,15 @@
       "variables": {},
       "methods": {
         "setFrame": {
-          "img": "blg-mb/draw.svg",
+          "img": "tjc-ms/draw.svg",
           "parameters": [
             {
-              "name": "рисунок",
+              "name": "Рисунок",
               "type": "Matrix5x7",
               "description": "Рисунок, который будет изображен на матрице."
             },
             {
-              "name": "время",
+              "name": "Время",
               "type": "uint32_t",
               "description": "Продолжительность анимации (в миллисекундах)."
             }
@@ -704,11 +739,11 @@
       "variables": {},
       "methods": {
         "draw": {
-          "img": "blg-mb/draw.svg",
+          "img": "tjc-ms/draw.svg",
           "parameters": [
             {
               "name": "Рисунок",
-              "type": ["&heart", "&smile", "&sadnes", "&cross", "&note", "&rhombus", "&square"],
+              "type": ["heart", "smile", "sadness", "cross", "note", "rhombus", "square"],
               "valueAlias": ["Сердце", "Улыбка", "Грусть", "Крест", "Нота", "Ромб", "Квадрат"],
               "description": "Рисунок, который будет изображен на матрице."
             }
@@ -744,7 +779,7 @@
           "img": "common/randomSeed.svg",
           "parameters": [
             {
-              "name": "затравка",
+              "name": "Затравка",
               "type": "unsigned long"
             }
           ],
@@ -760,11 +795,11 @@
           "img": "common/randomRange.svg",
           "parameters": [
             {
-              "name": "начало",
+              "name": "Начало",
               "type": "signed long long"
             },
             {
-              "name": "конец",
+              "name": "Конец",
               "type": "signed long long"
             }
           ],
@@ -824,7 +859,7 @@
           "img": "arduino/start.svg",
           "parameters": [
             {
-              "name": "интервал",
+              "name": "Интервал",
               "type": "unsigned long",
               "description": "Интервал срабатывания (в миллисекундах)."
             }
@@ -857,7 +892,7 @@
           "description": "Добавить указанное значение к счетчику.",
           "parameters": [
             {
-              "name": "значение",
+              "name": "Значение",
               "type": "int"
             }
           ]
@@ -868,7 +903,7 @@
           "description": "Вычесть указанное значение из счетчика.",
           "parameters": [
             {
-              "name": "значение",
+              "name": "Значение",
               "type": "int"
             }
           ]
@@ -879,7 +914,7 @@
           "description": "Установить значение счетчика.",
           "parameters": [
             {
-              "name": "значение",
+              "name": "Значение",
               "type": "int"
             }
           ]
@@ -892,7 +927,7 @@
       },
       "variables": {
         "value": {
-          "alias": "значение",
+          "alias": "Значение",
           "img": "common/value.svg",
           "description": "Текущее значение счетчика.",
           "type": "int"
@@ -924,11 +959,11 @@
       "methods": {
         "set": {
           "alias": "Установить",
-          "img": "common/set-value.svg",
+          "img": "common/set.svg",
           "description": "Установить значение, которое будет храниться в калькуляторе.",
           "parameters": [
             {
-              "name": "значение",
+              "name": "Значение",
               "type": "int32_t",
               "description": "Новое значение для калькулятора."
             }
@@ -940,7 +975,7 @@
           "description": "Прибавить значение к хранимому числу калькулятора.",
           "parameters": [
             {
-              "name": "слагаемое",
+              "name": "Слагаемое",
               "type": "int32_t",
               "description": "Слагаемое для операции."
             }
@@ -952,7 +987,7 @@
           "description": "Вычесть значение из хранимого числа калькулятора.",
           "parameters": [
             {
-              "name": "вычитаемое",
+              "name": "Вычитаемое",
               "type": "int32_t",
               "description": "Вычитаемое для операции."
             }
@@ -964,7 +999,7 @@
           "description": "Умножить значение хранимого числа калькулятора.",
           "parameters": [
             {
-              "name": "множитель",
+              "name": "Множитель",
               "type": "int32_t",
               "description": "Множитель для операции."
             }
@@ -976,7 +1011,7 @@
           "description": "Целочисленное деление хранимого числа калькулятора. При делении на ноль значение не изменяется и возникает сигнал.",
           "parameters": [
             {
-              "name": "делитель",
+              "name": "Делитель",
               "type": "int32_t",
               "description": "Делитель для операции."
             }
@@ -988,7 +1023,7 @@
           "description": "Получить остаток от деления хранимого числа калькулятора на указанный делитель. При делении на ноль значение не изменяется и возникает сигнал.",
           "parameters": [
             {
-              "name": "делитель",
+              "name": "Делитель",
               "type": "int32_t",
               "description": "Делитель для операции."
             }
@@ -1012,7 +1047,7 @@
           "description": "Побитовое И между хранимым числом калькулятора и параметром.",
           "parameters": [
             {
-              "name": "значение",
+              "name": "Значение",
               "type": "int32_t",
               "description": "Значение для операции."
             }
@@ -1024,7 +1059,7 @@
           "description": "Побитовое ИЛИ между хранимым числом калькулятора и параметром.",
           "parameters": [
             {
-              "name": "значение",
+              "name": "Значение",
               "type": "int32_t",
               "description": "Значение для операции."
             }
@@ -1036,7 +1071,7 @@
           "description": "Побитовая операция XOR между хранимым числом калькулятора и параметром.",
           "parameters": [
             {
-              "name": "значение",
+              "name": "Значение",
               "type": "int32_t",
               "description": "Значение для операции."
             }
@@ -1054,7 +1089,7 @@
           "description": "Побитовый сдвиг влево для хранимого числа калькулятора.",
           "parameters": [
             {
-              "name": "сдвиг",
+              "name": "Сдвиг",
               "type": "int32_t",
               "description": "Количество бит для сдвига."
             }
@@ -1066,7 +1101,7 @@
           "description": "Побитовый сдвиг вправо для хранимого числа калькулятора.",
           "parameters": [
             {
-              "name": "сдвиг",
+              "name": "Сдвиг",
               "type": "int32_t",
               "description": "Количество бит для сдвига."
             }
@@ -1108,11 +1143,11 @@
       "methods": {
         "set": {
           "alias": "Установить",
-          "img": "common/set-value.svg",
+          "img": "common/set.svg",
           "description": "Установить значение, которое будет храниться в калькуляторе.",
           "parameters": [
             {
-              "name": "значение",
+              "name": "Значение",
               "type": "float",
               "description": "Новое значение для калькулятора."
             }
@@ -1124,7 +1159,7 @@
           "description": "Прибавить значение к хранимому числу калькулятора.",
           "parameters": [
             {
-              "name": "слагаемое",
+              "name": "Слагаемое",
               "type": "float",
               "description": "Слагаемое для операции."
             }
@@ -1136,7 +1171,7 @@
           "description": "Вычесть значение из хранимого числа калькулятора.",
           "parameters": [
             {
-              "name": "вычитаемое",
+              "name": "Вычитаемое",
               "type": "float",
               "description": "Вычитаемое для операции."
             }
@@ -1148,7 +1183,7 @@
           "description": "Умножить значение хранимого числа калькулятора.",
           "parameters": [
             {
-              "name": "множитель",
+              "name": "Множитель",
               "type": "float",
               "description": "Множитель для операции."
             }
@@ -1160,7 +1195,7 @@
           "description": "Деление хранимого числа калькулятора. При делении на ноль значение не изменяется и возникает сигнал.",
           "parameters": [
             {
-              "name": "делитель",
+              "name": "Делитель",
               "type": "float",
               "description": "Делитель для операции."
             }
@@ -1172,7 +1207,7 @@
           "description": "Получить остаток от деления хранимого числа калькулятора на указанный делитель. При делении на ноль значение не изменяется и возникает сигнал.",
           "parameters": [
             {
-              "name": "делитель",
+              "name": "Делитель",
               "type": "float",
               "description": "Делитель для операции."
             }
@@ -1196,7 +1231,7 @@
           "description": "Возвести хранимое число калькулятора в степень.",
           "parameters": [
             {
-              "name": "степень",
+              "name": "Степень",
               "type": "float",
               "description": "Значение для операции (возводимая степень)."
             }
@@ -1214,7 +1249,7 @@
           "description": "Логарифм от хранимого числа калькулятора с задаваемым основанием.",
           "parameters": [
             {
-              "name": "основание",
+              "name": "Основание",
               "type": "float",
               "description": "Значение для операции (основание логарифма)."
             }
