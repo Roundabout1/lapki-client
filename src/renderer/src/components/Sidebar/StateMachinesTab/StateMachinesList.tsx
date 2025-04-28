@@ -97,7 +97,13 @@ export const StateMachinesList: React.FC<StateMachinesListProps> = ({
   };
 
   return (
-    <section>
+    <section
+      className={
+        isCollapsed()
+          ? ''
+          : 'max-h-full overflow-y-auto scrollbar-thin scrollbar-track-scrollbar-track scrollbar-thumb-scrollbar-thumb'
+      }
+    >
       {header()}
       {isInitialized ? (
         <div>
@@ -124,7 +130,7 @@ export const StateMachinesList: React.FC<StateMachinesListProps> = ({
           </div>
         </div>
       ) : (
-        <div className="px-4">Недоступно до открытия схемы</div>
+        <div className="px-4">Недоступно до открытия документа</div>
       )}
 
       <StateMachineEditModal
