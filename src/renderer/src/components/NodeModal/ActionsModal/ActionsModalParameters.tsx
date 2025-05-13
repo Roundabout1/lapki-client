@@ -22,12 +22,7 @@ interface ActionsModalParametersProps {
   setErrors: React.Dispatch<React.SetStateAction<Record<string, string>>>;
 
   componentOptions: SelectOption[];
-  methodOptionsSearch: (selectedParameterComponent: string | null) => {
-    value: string;
-    label: string;
-    hint: string | undefined;
-    icon: JSX.Element;
-  }[];
+  methodOptionsSearch: (selectedParameterComponent: string | null) => SelectOption[];
 
   smId: string;
   controller: CanvasController;
@@ -212,6 +207,11 @@ export const ActionsModalParameters: React.FC<ActionsModalParametersProps> = ({
                   setCheckedTo(name, !currentChecked);
                   handleInputChange(name, idx, '');
                 }}
+                hint={
+                  currentChecked
+                    ? 'Переключиться на константу'
+                    : 'Переключиться на атрибут компонента'
+                }
               />
             </div>
             {currentChecked ? (
