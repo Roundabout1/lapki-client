@@ -6,6 +6,8 @@ import { Select, Modal, TextField } from '@renderer/components/UI';
 import { useSettings } from '@renderer/hooks';
 import { removeNonNumbers } from '@renderer/utils';
 
+type FormValues = Main['settings']['flasher'];
+
 const options = [
   { value: 'remote', label: 'Удалённый' },
   { value: 'local', label: 'Локальный' },
@@ -14,13 +16,7 @@ const options = [
 interface FlasherSelectModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: FlasherSelectModalFormValues) => void;
-}
-
-export interface FlasherSelectModalFormValues {
-  host: string;
-  port: number;
-  type: 'local' | 'remote';
+  onSubmit: (data: FormValues) => void;
 }
 
 export const FlasherSelectModal: React.FC<FlasherSelectModalProps> = ({
@@ -36,7 +32,7 @@ export const FlasherSelectModal: React.FC<FlasherSelectModalProps> = ({
     handleSubmit: hookHandleSubmit,
     watch,
     setValue,
-  } = useForm<FlasherSelectModalFormValues>();
+  } = useForm<FormValues>();
 
   const isSecondaryFieldsDisabled = watch('type') === 'local';
 

@@ -26,10 +26,7 @@ import { Setting } from './Setting';
 
 import { Flasher } from '../Modules/Flasher';
 import { CompilerSelectModal } from '../serverSelect/CompilerSelectModal';
-import {
-  FlasherSelectModal,
-  FlasherSelectModalFormValues,
-} from '../serverSelect/FlasherSelectModal';
+import { FlasherSelectModal } from '../serverSelect/FlasherSelectModal';
 import { Badge } from '../UI';
 
 export interface SidebarCallbacks {
@@ -96,7 +93,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     openFlasherSettings();
   };
 
-  const handleFlasherModalSubmit = (data: FlasherSelectModalFormValues) => {
+  const handleFlasherModalSubmit = (data: any) => {
     if (!flasherSetting) return;
 
     setFlasherSetting({ ...flasherSetting, ...data });
