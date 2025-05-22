@@ -5,6 +5,7 @@ import { Controller, useForm } from 'react-hook-form';
 import { Modal, Select, TextField } from '@renderer/components/UI';
 import { useSettings } from '@renderer/hooks';
 import { removeNonNumbers } from '@renderer/utils';
+
 import { Compiler } from '../Modules/Compiler';
 
 type FormValues = Main['settings']['compiler'];
