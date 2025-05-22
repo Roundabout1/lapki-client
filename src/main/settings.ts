@@ -5,7 +5,7 @@ import { existsSync } from 'fs';
 
 import { defaultCompilerHost, defaultCompilerPort, defaultRemoteDocHost } from './version';
 
-type ModuleType = 'local' | 'remote';
+export type ModuleType = 'local' | 'remote';
 
 type MetaType =
   | {
