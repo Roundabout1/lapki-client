@@ -9,9 +9,12 @@ import { useFlasher } from '@renderer/store/useFlasher';
 import { Autosave } from './AutosaveSetting';
 
 import { AboutTheProgramModal } from '../AboutTheProgramModal';
+import { Flasher } from '../Modules/Flasher';
 import { ClientStatus } from '../Modules/Websocket/ClientStatus';
 import { ResetSettingsModal } from '../ResetSettingsModal';
+import { CompilerSelectModal } from '../serverSelect/CompilerSelectModal';
 import { DocSelectModal } from '../serverSelect/DocSelectModal';
+import { FlasherSelectModal } from '../serverSelect/FlasherSelectModal';
 
 const themeOptions = [
   {
@@ -24,12 +27,7 @@ const themeOptions = [
   },
 ];
 
-export interface SettingProps {
-  openCompilerSettings: () => void;
-  openLoaderSettings: () => void;
-}
-
-export const Setting: React.FC<SettingProps> = ({ openCompilerSettings, openLoaderSettings }) => {
+export const Setting: React.FC = () => {
   const modelController = useModelContext();
   const headControllerId = modelController.model.useData('', 'headControllerId');
   const controller = modelController.controllers[headControllerId];
@@ -40,9 +38,21 @@ export const Setting: React.FC<SettingProps> = ({ openCompilerSettings, openLoad
   const { connectionStatus, isFlashing } = useFlasher();
 
   const [isDocModalOpen, openDocModal, closeDocModal] = useModal(false);
+  const [isCompilerOpen, openCompilerSettings, closeCompilerSettings] = useModal(false);
+  const [isFlasherSettingsOpen, openFlasherSettings, closeFlasherSettings] = useModal(false);
   const [isResetWarningOpen, openResetWarning, closeResetWarning] = useModal(false);
   const [isAboutModalOpen, openAboutModal, closeAboutModal] = useModal(false);
   const [isAutosaveModalOpen, openAutosaveModal, closeAutosaveModal] = useModal(false);
+
+  const handleCloseFlasherSettings = () => {
+    Flasher.freezeReconnectTimer(false);
+    closeFlasherSettings();
+  };
+
+  const handleOpenFlasherSettings = () => {
+    Flasher.freezeReconnectTimer(true);
+    openFlasherSettings();
+  };
 
   const handleChangeTheme = ({ value }: any) => {
     setTheme(value);
@@ -84,7 +94,7 @@ export const Setting: React.FC<SettingProps> = ({ openCompilerSettings, openLoad
         </button>
         <button
           className="btn-primary"
-          onClick={openLoaderSettings}
+          onClick={handleOpenFlasherSettings}
           disabled={connectionStatus === ClientStatus.CONNECTING || isFlashing}
         >
           Загрузчик…
@@ -113,6 +123,8 @@ export const Setting: React.FC<SettingProps> = ({ openCompilerSettings, openLoad
       </div>
 
       <DocSelectModal isOpen={isDocModalOpen} onClose={closeDocModal} />
+      <FlasherSelectModal isOpen={isFlasherSettingsOpen} onClose={handleCloseFlasherSettings} />
+      <CompilerSelectModal isOpen={isCompilerOpen} onClose={closeCompilerSettings} />
       <AboutTheProgramModal isOpen={isAboutModalOpen} onClose={closeAboutModal} />
       <ResetSettingsModal isOpen={isResetWarningOpen} onClose={closeResetWarning} />
       <Autosave isOpen={isAutosaveModalOpen} onClose={closeAutosaveModal} />

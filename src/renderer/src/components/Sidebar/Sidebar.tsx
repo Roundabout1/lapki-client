@@ -7,9 +7,7 @@ import { ReactComponent as DocumentationIcon } from '@renderer/assets/icons/docu
 import { ReactComponent as FlasherIcon } from '@renderer/assets/icons/flasher.svg';
 import { ReactComponent as HistoryIcon } from '@renderer/assets/icons/history.svg';
 import { ReactComponent as SettingsIcon } from '@renderer/assets/icons/settings.svg';
-import { useSettings } from '@renderer/hooks';
 import { useFlasherHooks } from '@renderer/hooks/useFlasherHooks';
-import { useModal } from '@renderer/hooks/useModal';
 import { useModelContext } from '@renderer/store/ModelContext';
 import { useDoc } from '@renderer/store/useDoc';
 import { useManagerMS } from '@renderer/store/useManagerMS';
@@ -24,9 +22,6 @@ import { Menu } from './Menu';
 import { Menus } from './Menus';
 import { Setting } from './Setting';
 
-import { Flasher } from '../Modules/Flasher';
-import { CompilerSelectModal } from '../serverSelect/CompilerSelectModal';
-import { FlasherSelectModal } from '../serverSelect/FlasherSelectModal';
 import { Badge } from '../UI';
 
 export interface SidebarCallbacks {
@@ -60,9 +55,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   useFlasherHooks();
 
-  const [isCompilerOpen, openCompilerSettings, closeCompilerSettings] = useModal(false);
-  const [flasherSetting, setFlasherSetting] = useSettings('flasher');
-  const [isFlasherSettingsOpen, openFlasherSettings, closeFlasherSettings] = useModal(false);
   const [openData, setOpenData] = useState<
     [boolean, string | null, string | null, string] | undefined
   >(undefined);
@@ -82,16 +74,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
   useEffect(() => {
     setCompilerDataMS(compilerData);
   }, [compilerData, setCompilerDataMS]);
-
-  const closeFlasherModal = () => {
-    Flasher.freezeReconnectTimer(false);
-    closeFlasherSettings();
-  };
-
-  const openLoaderSettings = () => {
-    Flasher.freezeReconnectTimer(true);
-    openFlasherSettings();
-  };
 
   const handleFlasherClick = () => {
     openTab(modelController, {
@@ -124,10 +106,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       undefined,
       <History />,
       undefined,
-      <Setting
-        openCompilerSettings={openCompilerSettings}
-        openLoaderSettings={openLoaderSettings}
-      />,
+      <Setting />,
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [
@@ -190,9 +169,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
     <div className="flex">
       <Labels items={tabLabels} />
       <Menus items={menus} />
-
-      <FlasherSelectModal isOpen={isFlasherSettingsOpen} onClose={closeFlasherModal} />
-      <CompilerSelectModal isOpen={isCompilerOpen} onClose={closeCompilerSettings} />
     </div>
   );
 };
