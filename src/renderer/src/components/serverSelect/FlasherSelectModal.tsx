@@ -16,15 +16,10 @@ const options = [
 interface FlasherSelectModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: FormValues) => void;
 }
 
-export const FlasherSelectModal: React.FC<FlasherSelectModalProps> = ({
-  onClose,
-  onSubmit,
-  ...props
-}) => {
-  const [flasherSetting] = useSettings('flasher');
+export const FlasherSelectModal: React.FC<FlasherSelectModalProps> = ({ onClose, ...props }) => {
+  const [flasherSetting, setFlasherSetting] = useSettings('flasher');
 
   const {
     register,
@@ -37,7 +32,8 @@ export const FlasherSelectModal: React.FC<FlasherSelectModalProps> = ({
   const isSecondaryFieldsDisabled = watch('type') === 'local';
 
   const handleSubmit = hookHandleSubmit((data) => {
-    onSubmit(data);
+    if (!flasherSetting) return;
+    setFlasherSetting({ ...flasherSetting, ...data });
     onClose();
   });
 

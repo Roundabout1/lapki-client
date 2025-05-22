@@ -93,12 +93,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
     openFlasherSettings();
   };
 
-  const handleFlasherModalSubmit = (data: any) => {
-    if (!flasherSetting) return;
-
-    setFlasherSetting({ ...flasherSetting, ...data });
-  };
-
   const handleFlasherClick = () => {
     openTab(modelController, {
       type: 'managerMS',
@@ -197,11 +191,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       <Labels items={tabLabels} />
       <Menus items={menus} />
 
-      <FlasherSelectModal
-        isOpen={isFlasherSettingsOpen}
-        onSubmit={handleFlasherModalSubmit}
-        onClose={closeFlasherModal}
-      />
+      <FlasherSelectModal isOpen={isFlasherSettingsOpen} onClose={closeFlasherModal} />
       <CompilerSelectModal isOpen={isCompilerOpen} onClose={closeCompilerSettings} />
     </div>
   );
