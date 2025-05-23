@@ -21,6 +21,8 @@ import {
   handleSaveBinaryIntoFileReturn,
 } from './handlersTypes';
 
+import { basePath } from '../utils';
+
 /**
  * Асинхронный диалог открытия документа.
  */
@@ -29,6 +31,7 @@ export async function handleFileOpen(platform: string, path?: string): HandleFil
     const platforms: Map<string, Array<string>> = new Map([
       ['ide', ['json']],
       ['Cyberiada', ['graphml']],
+      ['Berloga', ['xml']],
     ]);
 
     let filePath = path;
@@ -109,7 +112,6 @@ export async function handleGetPlatforms(directory: string): HandleGetPlatformsR
 }
 
 export async function searchPlatforms(): SearchPlatformsReturn {
-  const basePath = path.join(__dirname, '../../resources').replace('app.asar', 'app.asar.unpacked');
   const DEFAULT_PATH = [
     path.join(basePath, 'platform'),
     path.join(app.getPath('userData'), 'platform'),
