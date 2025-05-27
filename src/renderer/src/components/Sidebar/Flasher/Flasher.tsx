@@ -188,7 +188,7 @@ export const FlasherTab: React.FC = () => {
     - bootloader REF_HW: ${meta.RefBlHw} (${metaID.type})
     - bootloader REF_FW: ${meta.RefBlFw}
     - bootloader REF_CHIP: ${meta.RefBlChip}
-    - booloader REF_PROTOCOL: ${meta.RefBlProtocol}
+    - bootloader REF_PROTOCOL: ${meta.RefBlProtocol}
     - cybergene REF_FW: ${meta.RefCgFw}
     - cybergene REF_HW: ${meta.RefCgHw}
     - cybergene REF_PROTOCOL: ${meta.RefCgProtocol}
