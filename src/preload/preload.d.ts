@@ -14,5 +14,5 @@ declare global {
   interface Main {
     settings: Settings;
   }
-  const mainBasePath: basePath;
+  const mainBasePath = basePath;
 }

@@ -48,8 +48,8 @@ import { Switch, WithHint } from '../../UI';
 
 const monitorTabName = 'Монитор порта';
 
-const pathToDefaultFirmwares = `${mainBasePath}`;
-const defaultFirmwares = new Map([['blg-mb-1-a7', 'blg-mb-1-a7.demo1.v1.bin']]);
+// (Roundabout1) TODO: перенести в описание платформ
+const defaultFirmwares = new Map([['blg-mb-1-a7', 'demo-blg-mb-1-a7.bin']]);
 
 export const FlasherTab: React.FC = () => {
   const modelController = useModelContext();
@@ -508,8 +508,45 @@ export const FlasherTab: React.FC = () => {
     ManagerMS.binStart();
   };
 
+  const getBoardInfo = (tableItem: FlashTableItem) => {
+    if (tableItem.targetType === FirmwareTargetType.dev) {
+      return devices.get(tableItem.targetId as string);
+    } else if (tableItem.targetType === FirmwareTargetType.tjc_ms) {
+      return getEntryById(tableItem.targetId as number);
+    } else {
+      return undefined;
+    }
+  };
+
   const handleFlashFactoryBin = async () => {
-    ManagerMS.addLog('Загрузка заводской прошивки не реализована...');
+    setFlashTableData(
+      flashTableData.map((item) => {
+        const boardInfo = getBoardInfo(item);
+        if (!boardInfo) {
+          ManagerMS.addLog(
+            'Ошибка! Не удалось извлечь информацию об устройстве. Заводская прошивка не может быть загружена.'
+          );
+          return item;
+        }
+        const boardName = ManagerMS.displayBoardInfo(boardInfo);
+        const typeId = ManagerMS.getTypeId(boardInfo);
+        if (!typeId) {
+          ManagerMS.addLog(
+            `${boardName}: Ошибка! Не удалось извлечь ID для типа устройства. Заводская прошивка не может быть загружена.`
+          );
+          return item;
+        }
+        const fileName = defaultFirmwares.get(typeId);
+        if (!fileName) {
+          ManagerMS.addLog(
+            `${boardName}: Данное устройство не поддерживает операцию загрузки заводской прошивки.`
+          );
+          return item;
+        }
+        const pathToFile = `${mainBasePath}/${fileName}`;
+        return { ...item, isFile: true, source: pathToFile };
+      })
+    );
   };
 
   const handleRemoveDevs = () => {
