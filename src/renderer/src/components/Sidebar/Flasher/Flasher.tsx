@@ -48,6 +48,9 @@ import { Switch, WithHint } from '../../UI';
 
 const monitorTabName = 'Монитор порта';
 
+const pathToDefaultFirmwares = `${mainBasePath}`;
+const defaultFirmwares = new Map([['blg-mb-1-a7', 'blg-mb-1-a7.demo1.v1.bin']]);
+
 export const FlasherTab: React.FC = () => {
   const modelController = useModelContext();
   const [flasherSetting] = useSettings('flasher');

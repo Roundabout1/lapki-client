@@ -1,6 +1,7 @@
 import { ElectronAPI } from '@electron-toolkit/preload';
 
 import { Settings } from '../main/settings';
+import { basePath } from '../main/utils';
 
 import type { API } from './index';
 
@@ -13,4 +14,5 @@ declare global {
   interface Main {
     settings: Settings;
   }
+  const mainBasePath: basePath;
 }
