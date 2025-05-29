@@ -189,11 +189,11 @@ export class ManagerMS {
     const type = addressInfo.type ? addressInfo.type : 'Неизвестный тип';
     return `${name} (${type})`;
   }
-  static displayDeviceInfo(devInfo: AddressData | Device) {
-    if (devInfo instanceof Device) {
-      return `${devInfo.displayName()}`;
+  static displayBoardInfo(boardInfo: AddressData | Device) {
+    if (boardInfo instanceof Device) {
+      return `${boardInfo.displayName()}`;
     }
-    return this.displayAddressInfo(devInfo);
+    return this.displayAddressInfo(boardInfo);
   }
   static clearLog() {
     this.logSize = 0;
