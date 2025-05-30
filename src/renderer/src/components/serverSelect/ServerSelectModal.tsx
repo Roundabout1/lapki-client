@@ -3,18 +3,9 @@ import { Controller, UseFormReturn } from 'react-hook-form';
 import { Modal, Select, TextField } from '@renderer/components/UI';
 import { removeNonNumbers } from '@renderer/utils';
 
+import { FormValues } from './types';
+
 type ModuleType = Main['moduleType'];
-
-type Address = {
-  host: string;
-  port?: number;
-};
-
-type FormValues = {
-  local: Address;
-  remote: Address;
-  type: ModuleType;
-};
 
 type optionType = {
   value: ModuleType;
