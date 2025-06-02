@@ -978,26 +978,27 @@ export const FlasherTab: React.FC = () => {
         <FlasherTable addressEnrtyEdit={addressEnrtyEdit} getEntryById={getEntryById} />
       </div>
       <div className="m-1 flex min-h-14">
-        <div
-          className={twMerge(
-            selectedDevicesCount == 0 ? 'opacity-50' : '',
-            'ml-3 mr-3 flex w-5 items-center justify-center gap-1 font-Fira-Mono'
-          )}
-        >
-          {selectedDevicesCount}
-        </div>
-        {selectedDevicesCount > 0 ? operationButtons() : selectorHint()}
-        <div className="flex-1"></div>
         <button
           className={twMerge(
-            'btn-primary ml-auto mr-4 p-2 py-1',
+            'btn-primary ml-3 mr-3 p-2 py-1',
             isProMode ? '' : 'bg-bg-secondary text-border-contrast'
           )}
-          style={{ marginLeft: 'auto' }}
+          // style={{ marginLeft: 'auto' }}
           onClick={() => handleSwitchProMode()}
         >
           Продвинутый
         </button>
+        <div className="ml-auto flex">
+          <div
+            className={twMerge(
+              selectedDevicesCount == 0 ? 'opacity-50' : '',
+              'ml-3 mr-3 flex w-5 items-center justify-center gap-1 font-Fira-Mono'
+            )}
+          >
+            {selectedDevicesCount}
+          </div>
+          {selectedDevicesCount > 0 ? operationButtons() : selectorHint()}
+        </div>
       </div>
       <div className="m-2 mt-5 text-lg font-semibold">Журнал действий</div>
       <div
