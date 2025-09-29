@@ -255,10 +255,11 @@ export class StatesController extends EventEmitter<StatesControllerEvents> {
   };
 
   changeInitialStatePosition = (args: ChangePosition) => {
-    const { id } = args;
+    const { id, endPosition } = args;
+
     const state = this.data.initialStates.get(id);
     if (!state) return;
-
+    state.position = endPosition;
     this.view.isDirty = true;
   };
 
@@ -464,7 +465,7 @@ export class StatesController extends EventEmitter<StatesControllerEvents> {
     this.controller.selectState({ smId: state.smId, id: state.id });
     this.controller.emit('selectState', { smId: state.smId, id: state.id });
     const targetPos = state.computedPosition;
-    const titleHeight = state.titleHeight;
+    const titleHeight = state.titleHeight / this.controller.scale;
     const y = e.event.y - targetPos.y;
     // FIXME: если будет учёт нажатий на дочерний контейнер, нужно отсеять их здесь
     if (y > titleHeight) {
