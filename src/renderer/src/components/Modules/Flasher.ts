@@ -78,7 +78,7 @@ export class Flasher extends ClientWS {
         if (bin.fileContent instanceof Blob) {
           return bin.fileContent;
         } else {
-          return new Blob([bin.fileContent]);
+          return new Blob([new Uint8Array(bin.fileContent)]);
         }
       }
     }
@@ -110,7 +110,7 @@ export class Flasher extends ClientWS {
     if (openData[0]) {
       const buffer = openData[3] as Buffer;
       //console.log(buffer.toString());
-      Flasher.binary = new Blob([buffer]);
+      Flasher.binary = new Blob([new Uint8Array(buffer)]);
       return true;
     } else {
       //console.log('set file (false)');
@@ -167,16 +167,6 @@ export class Flasher extends ClientWS {
     this.send('flash-start', {
       deviceID: device.deviceID,
       fileSize: Flasher.binary.size,
-    });
-  }
-
-  static getFirmware(dev: Device, address: string, blockSize: number, RefBlChip?: string) {
-    this.currentFlashingDevice = dev;
-    this.send('ms-get-firmware', {
-      deviceID: dev.deviceID,
-      address: address,
-      blockSize: blockSize,
-      RefBlChip: RefBlChip ?? '',
     });
   }
 
@@ -247,6 +237,17 @@ export class Flasher extends ClientWS {
       type: type,
       payload: payload,
     } as FlasherMessage;
+    this.connection?.send(JSON.stringify(request));
+  }
+  /**
+   * Отправить массив запросов на загрузчик для их выполнения по очереди.
+   * @param payload массив с запросами для загрузчика.
+   */
+  static sendPack(payload: FlasherMessage[]) {
+    const request = {
+      type: 'requests-pack',
+      payload: payload,
+    };
     this.connection?.send(JSON.stringify(request));
   }
 }
