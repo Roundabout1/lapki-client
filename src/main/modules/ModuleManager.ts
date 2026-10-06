@@ -1,12 +1,16 @@
+import { app } from 'electron';
 import settings from 'electron-settings';
 // импорт старой версии (3.0 вместо 4.0), так как новая версия требует ESM
 import fixPath from 'fix-path';
 
 import { ChildProcessWithoutNullStreams, spawn } from 'child_process';
 import { existsSync } from 'fs';
+import { cp, mkdir, readFile } from 'fs/promises';
 import http from 'http';
+import path from 'path';
 
 import { findFreePort, getUsedPorts } from './freePortFinder';
+import { terminateProcessTree } from './processTree';
 
 import { defaultSettings } from '../settings';
 import { basePath } from '../utils';
@@ -41,6 +45,7 @@ export class ModuleStatus {
 export class ModuleManager {
   static localProccesses: Map<string, ChildProcessWithoutNullStreams> = new Map();
   static moduleStatus: Map<string, ModuleStatus> = new Map();
+  static stoppingModules: Map<string, Promise<void>> = new Map();
   static async startLocalModule(module: ModuleName) {
     const usedPorts = getUsedPorts();
     this.moduleStatus.set(module, new ModuleStatus());
@@ -48,14 +53,13 @@ export class ModuleManager {
       const platform = process.platform;
       let chprocess;
       let modulePath: string = '';
+      // При запуске из ярлыка под Linux или в MacOS PATH можем быть урезанным.
+      // Восстановим его, чтобы получить доступ к установленному в системе компилятору.
+      if (platform === 'darwin' || platform === 'linux') {
+        fixPath();
+      }
       switch (platform) {
-        case 'darwin': {
-          // позволяет унаследовать $PATH, то есть системный путь
-          // это нужно для того, чтобы загрузчик смог получить доступ к avrdude, если путь к нему прописан в $PATH
-          fixPath();
-          // break не нужен, так как дальнейшие действия одинаковы для Linux, macOS и windows
-        }
-        // eslint-disable-next-line no-fallthrough
+        case 'darwin':
         case 'linux':
         case 'win32':
           modulePath = this.getModulePath(module);
@@ -92,14 +96,30 @@ export class ModuleManager {
             if (existsSync(configPath)) {
               flasherArgs.push(`-configPath=${configPath}`);
             }
-            chprocess = spawn(modulePath, flasherArgs);
+            chprocess = spawn(modulePath, flasherArgs, {
+              env: this.getFlasherEnvironment(),
+            });
             break;
           }
           case 'lapki-compiler': {
             const port = await findFreePort({ usedPorts });
-            const compilerArgs = [`--server-port=${port}`, '--killable'];
+            this.prepareCompilerToolchainPath();
+            await this.prepareArduinoCliData();
+            const compilerUserDataPath = path.join(app.getPath('userData'), 'lapki-compiler');
+            await mkdir(compilerUserDataPath, { recursive: true });
+            const compilerArgs = [
+              `--server-port=${port}`,
+              '--killable',
+              `--library-path=${this.getCompilerDataPath('library')}`,
+              `--platform-directory=${this.getCompilerDataPath('platforms')}`,
+              `--build-directory=${path.join(compilerUserDataPath, 'build')}`,
+              `--artifacts-directory=${path.join(compilerUserDataPath, 'artifacts')}`,
+              `--log-path=${path.join(compilerUserDataPath, 'logs.log')}`,
+              `--access-token-path=${path.join(compilerUserDataPath, 'ACCESS_TOKENS.txt')}`,
+            ];
             switch (platform) {
               case 'win32':
+              case 'linux':
                 modulePath = this.getCompilerPath();
                 await settings.set('compiler.localPort', port);
                 defaultSettings.compiler.localPort = Number(port);
@@ -156,30 +176,64 @@ export class ModuleManager {
   }
 
   private static async sendKillRequest(port: number): Promise<void> {
-    return new Promise((resolve, _) => {
+    return new Promise((resolve) => {
+      let settled = false;
+      const finish = () => {
+        if (settled) return;
+        settled = true;
+        resolve();
+      };
       const req = http.get(`http://localhost:${port}/kill`, (res) => {
-        res.on('end', () => resolve());
+        res.resume();
+        res.on('end', finish);
+        res.on('error', finish);
       });
       req.on('error', (err) => {
         // Ignore errors since we're shutting down anyway
         console.log(err);
-        resolve();
+        finish();
       });
-      req.end();
+      req.setTimeout(1_000, () => {
+        req.destroy();
+        finish();
+      });
     });
   }
 
-  static async stopModule(module: ModuleName) {
-    if (this.localProccesses.has(module)) {
+  static async stopModule(module: ModuleName): Promise<void> {
+    const pendingStop = this.stoppingModules.get(module);
+    if (pendingStop) return pendingStop;
+
+    const child = this.localProccesses.get(module);
+    if (!child) return;
+
+    const stop = (async () => {
       if (module === 'lapki-compiler') {
         const port = Number(await settings.get('compiler.localPort'));
         await this.sendKillRequest(port);
-        this.localProccesses.get(module)?.kill();
-      } else {
-        this.localProccesses.get(module)!.kill();
       }
-      this.localProccesses.delete(module);
+
+      await terminateProcessTree(child);
+
+      if (this.localProccesses.get(module) === child) {
+        this.localProccesses.delete(module);
+      }
+    })();
+
+    this.stoppingModules.set(module, stop);
+    try {
+      await stop;
+    } finally {
+      this.stoppingModules.delete(module);
     }
+  }
+
+  static async stopAllModules(): Promise<void> {
+    await Promise.all(
+      (['lapki-flasher', 'lapki-compiler', 'sm-interpreter'] as const).map((module) =>
+        this.stopModule(module)
+      )
+    );
   }
 
   static getLocalStatus(module: ModuleName): ModuleStatus {
@@ -203,6 +257,116 @@ export class ModuleManager {
 
   static getCompilerPath() {
     return this.getModulePath('lapki-compiler/lapki-compiler');
+  }
+
+  /** Add bundled compiler tools to this process only; never alter user PATH. */
+  private static prepareCompilerToolchainPath(): void {
+    let toolchainDirectories: string[];
+    if (process.platform === 'linux') {
+      const toolchainRoot = path.join(basePath, 'toolchains', 'linux');
+      toolchainDirectories = [
+        path.join(toolchainRoot, 'arduino-cli'),
+        path.join(toolchainRoot, 'gcc-arm-none-eabi', 'bin'),
+        path.join(toolchainRoot, 'make'),
+      ];
+    } else if (process.platform === 'win32') {
+      const moduleRoot = this.getOsPath();
+      toolchainDirectories = [
+        path.join(moduleRoot, 'gcc-arm-none-eabi', 'bin'),
+        path.join(moduleRoot, 'arduino-cli'),
+        path.join(moduleRoot, 'irpcb', 'bin'),
+      ];
+    } else {
+      return;
+    }
+
+    const currentPath = process.env.PATH ?? '';
+    const pathEntries = currentPath.split(path.delimiter);
+    const availableDirectories = toolchainDirectories.filter(existsSync);
+    const missingDirectories = availableDirectories.filter(
+      (directory) => !pathEntries.includes(directory)
+    );
+    if (missingDirectories.length > 0) {
+      process.env.PATH = `${missingDirectories.join(path.delimiter)}${path.delimiter}${currentPath}`;
+    }
+  }
+
+  /**
+   * Arduino AVR core is bundled per host platform, then copied once into a
+   * writable user directory. Arduino CLI stores indexes and caches alongside
+   * installed platforms, so its packaged resource directory cannot be used
+   * directly.
+   */
+  private static async prepareArduinoCliData(): Promise<void> {
+    const bundledDataPath = path.join(basePath, 'arduino-cli-data', process.platform);
+    const markerName = '.lapki-arduino-avr-core-version';
+    const bundledMarkerPath = path.join(bundledDataPath, markerName);
+
+    if (process.platform === 'win32') {
+      const arduinoCliDirectory = path.join(this.getOsPath(), 'arduino-cli');
+      const arduinoCliPath = path.join(arduinoCliDirectory, 'arduino-cli.exe');
+      if (existsSync(arduinoCliPath)) {
+        const currentPath = process.env.PATH ?? '';
+        if (!currentPath.split(path.delimiter).includes(arduinoCliDirectory)) {
+          process.env.PATH = `${arduinoCliDirectory}${path.delimiter}${currentPath}`;
+        }
+      }
+    }
+
+    if (!existsSync(bundledMarkerPath)) return;
+
+    const coreVersion = (await readFile(bundledMarkerPath, 'utf8')).trim();
+    if (!coreVersion) return;
+
+    const localCoreDirectory = coreVersion.replace(/[^a-zA-Z0-9._-]/g, '_');
+    const localDataPath = path.join(app.getPath('userData'), 'arduino-cli', localCoreDirectory);
+    const localMarkerPath = path.join(localDataPath, markerName);
+    if (!existsSync(localMarkerPath)) {
+      // Arduino AVR GCC uses relative symlinks for its LTO plugin. Preserve
+      // them verbatim: resolving them here would point user data at the
+      // temporary AppImage mount (or a particular DEB installation path).
+      await cp(bundledDataPath, localDataPath, {
+        recursive: true,
+        force: true,
+        verbatimSymlinks: true,
+      });
+    }
+
+    process.env.ARDUINO_DIRECTORIES_DATA = localDataPath;
+
+  }
+
+  /**
+   * Snap cannot load arbitrary host libraries.  libusb is shipped beside the
+   * Linux modules, but must not replace the host library lookup for unrelated
+   * child processes such as the compiler.
+   */
+  private static getFlasherEnvironment(): NodeJS.ProcessEnv {
+    if (process.platform !== 'linux') return process.env;
+
+    // A DEB uses the distribution's libusb declared in its dependencies.
+    // Only self-contained launchers need the bundled copy.
+    if (!process.env.APPIMAGE && !process.env.SNAP) return process.env;
+
+    const bundledLibraryPath = path.join(this.getOsPath(), 'lib');
+    if (!existsSync(bundledLibraryPath)) return process.env;
+
+    const currentLibraryPath = process.env.LD_LIBRARY_PATH;
+    return {
+      ...process.env,
+      LD_LIBRARY_PATH: currentLibraryPath
+        ? `${bundledLibraryPath}${path.delimiter}${currentLibraryPath}`
+        : bundledLibraryPath,
+    };
+  }
+
+  /**
+   * Compiler data is bundled once next to the executable.  Keeping the paths
+   * explicit lets a frozen one-file compiler use the packaged assets instead
+   * of its temporary extraction directory.
+   */
+  static getCompilerDataPath(directory: 'library' | 'platforms'): string {
+    return `${this.getOsPath()}/lapki-compiler/${directory}`;
   }
 
   static getConfPath(): string {
